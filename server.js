@@ -14,9 +14,7 @@ const __dirname = path.dirname(__filename);
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Catch-all route to serve index.html for the root URL
-app.get(/.*/, (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
+
 app.use(express.json());
 
 const INTEREST_MAP = {
@@ -149,6 +147,9 @@ app.get('/api/search', async (req, res) => {
 
     const topPicks = scored.slice(0, 5);
     res.json({ query: input, results: topPicks });
+});
+app.get(/.*/, (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 app.listen(PORT, () => {
