@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Distraction-Free Career & Learning Hub</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --accent: #38bdf8;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            color: var(--accent);
+            margin-bottom: 0.5rem;
+        }
+
+        p {
+            color: var(--text-muted);
+        }
+
+        .search-box {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+            max-width: 600px;
+            margin-bottom: 1.5rem;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 12px 16px;
+            border-radius: 8px;
+            border: 1px solid #334155;
+            background: #1e293b;
+            color: var(--text);
+            font-size: 1rem;
+        }
+
+        button {
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: none;
+            background: var(--accent);
+            color: #0f172a;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            max-width: 600px;
+            margin-bottom: 2rem;
+        }
+
+        .chip {
+            background: #334155;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            cursor: pointer;
+            text-transform: capitalize;
+        }
+
+        .chip:hover {
+            background: var(--accent);
+            color: #0f172a;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+        }
+
+        .card-body {
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .card-meta {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+
+        .card-btn {
+            margin-top: auto;
+            text-align: center;
+            background: #334155;
+            color: var(--text);
+            text-decoration: none;
+            padding: 10px;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+
+        .card-btn:hover {
+            background: var(--accent);
+            color: #0f172a;
+        }
+
+        #player-container {
+            display: none;
+            width: 100%;
+            max-width: 800px;
+            margin-bottom: 2rem;
+        }
+
+        .iframe-wrapper {
+            position: relative;
+            padding-bottom: 56.25%;
+            /* 16:9 aspect ratio */
+            height: 0;
+            overflow: hidden;
+            border-radius: 12px;
+        }
+
+        .iframe-wrapper iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>FocusHub Learning</h1>
+        <p>Distraction-free career discovery & learning videos</p>
+    </header>
+
+    <div class="search-box">
+        <input type="text" id="queryInput" placeholder="Search a topic or career...">
+        <button onclick="performSearch()">Search</button>
+    </div>
+
+    <div class="chips">
+        <span class="chip" onclick="searchTopic('gaming')">Gaming</span>
+        <span class="chip" onclick="searchTopic('design')">Design</span>
+        <span class="chip" onclick="searchTopic('business')">Business</span>
+        <span class="chip" onclick="searchTopic('science')">Science</span>
+        <span class="chip" onclick="searchTopic('writing')">Writing</span>
+        <span class="chip" onclick="searchTopic('people')">People</span>
+        <span class="chip" onclick="searchTopic('building')">Building</span>
+        <span class="chip" onclick="searchTopic('numbers')">Numbers</span>
+        <span class="chip" onclick="searchTopic('start')">✨ Cold Start</span>
+    </div>
+
+    <div id="player-container">
+        <div class="iframe-wrapper">
+            <iframe id="video-player" src="" allowfullscreen></iframe>
+        </div>
+    </div>
+
+    <div class="grid" id="results"></div>
+
+    <script>
+        async function searchTopic(topic) {
+            document.getElementById('queryInput').value = topic;
+            performSearch();
+        }
+
+        async function performSearch() {
+            const q = document.getElementById('queryInput').value.trim();
+            if (!q) return;
+
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<p>Loading targeted content...</p>';
+
+            try {
+                const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
+                const data = await res.json();
+
+                resultsDiv.innerHTML = '';
+
+                if (!data.results || data.results.length === 0) {
+                    resultsDiv.innerHTML = '<p>No safe videos found for this search.</p>';
+                    return;
+                }
+
+                data.results.forEach(video => {
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    card.innerHTML = `
+            <img src="${video.thumbnail}" alt="${video.title}">
+            <div class="card-body">
+              <div class="card-title">${video.title}</div>
+              <div class="card-meta">
+                ${video.channel} • ${video.views} views • ${video.duration}
+              </div>
+              <button class="card-btn" onclick="playVideo('${video.id}')">Watch In-App</button>
+            </div>
+          `;
+                    resultsDiv.appendChild(card);
+                });
+            } catch (err) {
+                resultsDiv.innerHTML = '<p>Error loading videos. Please check your API setup.</p>';
+            }
+        }
+
+        function playVideo(id) {
+            const container = document.getElementById('player-container');
+            const iframe = document.getElementById('video-player');
+            iframe.src = `https://www.youtube.com/embed/${id}?autoplay=1&rel=0`;
+            container.style.display = 'block';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    </script>
+</body>
+
+</html>
