@@ -654,11 +654,10 @@
             <div class="video-title"></div>
             <div class="channel-name"></div>
             
-            <div class="card-actions">
-                <button class="action-btn" onclick="handleWatch('${id}')">Watch</button>
-              <button class="action-btn" onclick='openPlayerWithHistory(${JSON.stringify(videoDataObj)})'>Watch</button>
-              <button class="action-btn" onclick="toggleSummary('${id}')">✨ Summary</button>
-            </div>
+           <div class="card-actions">
+  <button class="action-btn" onclick="handleWatch('${id}')">Watch</button>
+  <button class="action-btn" onclick="toggleSummary('${id}')">Summary</button>
+</div>
 
             <div class="summary-box" id="summary-${id}">
               <strong>📌 Full Summary / Description:</strong>
