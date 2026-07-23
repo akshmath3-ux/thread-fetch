@@ -424,10 +424,10 @@
                 <h1>FocusHub</h1>
             </div>
             <div class="nav-tabs">
-                <button class="tab-btn" id="tabHistory" onclick="switchTab('history')">History <span
-                        id="historyCount">0</span></button>
-                <button class="tab-btn active" id="tabSearch" onclick="switchTab('search')">Search Feed</button>
-                <button class="tab-btn" id="tabSaved" onclick="switchTab('saved')">Saved (<span
+                <button class="tab-btn" id="tabHistory" onclick="showHistoryTab()">History (<span
+                        id="historyCount">0</span>)</button>
+                <button class="tab-btn active" id="tabSearch" onclick="showSearchTab()">Search Feed</button>
+                <button class="tab-btn" id="tabSaved" onclick="showSavedTab()">Saved (<span
                         id="savedCount">0</span>)</button>
             </div>
         </header>
@@ -485,6 +485,26 @@
     </div>
 
     <script>
+        function showHistoryTab() {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('tabHistory')?.classList.add('active');
+            currentTab = 'history';
+            renderVideos(watchedVideos);
+        }
+
+        function showSearchTab() {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('tabSearch')?.classList.add('active');
+            currentTab = 'search';
+            renderVideos(currentSearchResults);
+        }
+
+        function showSavedTab() {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('tabSaved')?.classList.add('active');
+            currentTab = 'saved';
+            renderVideos(savedVideos);
+        }
         // --- Pomodoro Timer Logic ---
         function handleWatch(id) {
             // Find the video object from whichever list is currently active or search results
