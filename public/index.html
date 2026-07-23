@@ -558,12 +558,13 @@
         let timerInterval = null;
         let isRunning = false;
         let currentMode = 'Focus Session';
-
         function updateDisplay() {
+            const displayEl = document.getElementById('timer-display') || document.getElementById('timerDisplay');
+            if (!displayEl) return;
+
             const minutes = Math.floor(remainingSeconds / 60);
             const seconds = remainingSeconds % 60;
-            document.getElementById('timer-display').innerText =
-                `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            displayEl.innerText = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
         }
 
         function setTimerDuration(minutes) {
