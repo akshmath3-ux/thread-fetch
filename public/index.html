@@ -566,8 +566,15 @@
             watchedVideos = [];
         }
         function addToWatchHistory(videoObj) {
-            // Remove if it's already in history so we don't have duplicates, then add to the front
-            watchedVideos = watchedVideos.filter(v => v.id !== videoObj.id);
+            const incomingId = videoObj.id?.videoId || videoObj.id;
+
+            // Remove if it's already in history using the clean ID comparison
+            watchedVideos = watchedVideos.filter(v => {
+                const existingId = v.id?.videoId || v.id;
+                return existingId !== incomingId;
+            });
+
+            // Add to the front
             watchedVideos.unshift(videoObj);
 
             // Keep only the last 20 watched videos
@@ -576,10 +583,10 @@
             }
 
             localStorage.setItem('focushub_watched', JSON.stringify(watchedVideos));
+            updateCounts();
         }
-        try {
-            savedVideos = JSON.parse(localStorage.getItem('focushub_saved') || '[]');
-        } catch (e) {
+        savedVideos = JSON.parse(localStorage.getItem('focushub_saved') || '[]');
+        try { } catch (e) {
             savedVideos = [];
         }
 
