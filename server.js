@@ -116,9 +116,6 @@ async function fetchTopicResults(query) {
     return [];
 }
 
-return detailsData.items || [];
-}
-
 app.get('/api/search', async (req, res) => {
     const input = (req.query.q || '').trim();
     if (!input) return res.status(400).json({ error: 'Query parameter required' });
