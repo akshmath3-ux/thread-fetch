@@ -630,11 +630,16 @@
             const rawQuery = document.getElementById('searchInput').value.trim();
             if (!rawQuery) return;
 
-            // Universally enhance short/broad queries to ensure educational content surfaces
             let enhancedQuery = rawQuery;
+            const lower = rawQuery.toLowerCase();
             const words = rawQuery.split(' ');
-            if (words.length <= 2) {
-                enhancedQuery = `${rawQuery} tutorial guide lecture course`;
+
+            // Prevent confusion like "cycle" matching software life cycles
+            if (lower === 'cycle' || lower === 'biking') {
+                enhancedQuery = 'bicycling workout health benefits exercise cycling';
+            } else if (words.length <= 2) {
+                // General smart educational enhancement for short queries
+                enhancedQuery = `${rawQuery} educational tutorial guide course`;
             }
 
             const duration = document.getElementById('durationFilter').value;
@@ -646,7 +651,10 @@
                 const res = await fetch(`/api/search?q=${encodeURIComponent(enhancedQuery)}&duration=${duration}`);
                 const data = await res.json();
 
-                currentSearchResults = Array.isArray(data) ? data : (data.results || []);
+                let results = Array.isArray(data) ? data : (data.results || []);
+
+                // Slice to show up to 8 videos instead of default amount
+                currentSearchResults = results.slice(0, 8);
 
                 if (!currentSearchResults || currentSearchResults.length === 0) {
                     grid.innerHTML = '<p style="color: var(--text-muted); grid-column: 1/-1; text-align: center;">No educational videos found.</p>';
