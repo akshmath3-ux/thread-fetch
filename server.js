@@ -92,13 +92,16 @@ async function fetchTopicResults(query) {
             const searchRes = await fetch(searchUrl);
             const searchData = await searchRes.json();
 
-            // If key hit quota limit (403 error), skip to next key
-            if (searchData.error && searchData.error.code === 403) {
-                console.warn(`Quota limit reached for key, trying secondary key...`);
-                continue;
+            if (searchData.error) {
+                console.error(`API Key (${apiKey ? apiKey.substring(0, 6) : 'MISSING'}...) returned error:`, searchData.error);
+                if (searchData.error.code === 403) {
+                    console.warn(`Quota limit reached for key, trying next key...`);
+                    continue;
+                }
+                return [];
             }
 
-            if (searchData.error || !searchData.items) return [];
+            if (!searchData.items || searchData.items.length === 0) continue;
 
             const videoIds = searchData.items.map(item => item.id.videoId).filter(Boolean).join(',');
             if (!videoIds) return [];
@@ -109,7 +112,7 @@ async function fetchTopicResults(query) {
 
             return detailsData.items || [];
         } catch (err) {
-            console.error("API Fetch Error:", err);
+            console.error("API Fetch Exception:", err);
         }
     }
 
