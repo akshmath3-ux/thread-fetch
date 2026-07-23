@@ -5,7 +5,10 @@ import { fileURLToPath } from 'url';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const API_KEY = process.env.YOUTUBE_API_KEY;
+const API_KEYS = [
+    process.env.YOUTUBE_API_KEY_1 || process.env.YOUTUBE_API_KEY,
+    process.env.YOUTUBE_API_KEY_2
+].filter(Boolean);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -83,21 +86,37 @@ function scoreVideo(video, channelCounts) {
 }
 
 async function fetchTopicResults(query) {
-    // safeSearch=strict filters out vulgar/inappropriate content
-    const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(query)}&type=video&maxResults=15&safeSearch=strict&key=${API_KEY}`;
-    const searchRes = await fetch(searchUrl);
-    const searchData = await searchRes.json();
+    for (const apiKey of API_KEYS) {
+        try {
+            const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(query)}&type=video&maxResults=10&key=${apiKey}`;
+            const searchRes = await fetch(searchUrl);
+            const searchData = await searchRes.json();
 
-    if (searchData.error || !searchData.items) return [];
+            // If key hit quota limit (403 error), skip to next key
+            if (searchData.error && searchData.error.code === 403) {
+                console.warn(`Quota limit reached for key, trying secondary key...`);
+                continue;
+            }
 
-    const videoIds = searchData.items.map(item => item.id.videoId).filter(Boolean).join(',');
-    if (!videoIds) return [];
+            if (searchData.error || !searchData.items) return [];
 
-    const detailsUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics,contentDetails&id=${videoIds}&key=${API_KEY}`;
-    const detailsRes = await fetch(detailsUrl);
-    const detailsData = await detailsRes.json();
+            const videoIds = searchData.items.map(item => item.id.videoId).filter(Boolean).join(',');
+            if (!videoIds) return [];
 
-    return detailsData.items || [];
+            const detailsUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics,contentDetails&id=${videoIds}&key=${apiKey}`;
+            const detailsRes = await fetch(detailsUrl);
+            const detailsData = await detailsRes.json();
+
+            return detailsData.items || [];
+        } catch (err) {
+            console.error("API Fetch Error:", err);
+        }
+    }
+
+    return [];
+}
+
+return detailsData.items || [];
 }
 
 app.get('/api/search', async (req, res) => {
