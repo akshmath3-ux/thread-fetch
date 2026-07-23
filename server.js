@@ -174,7 +174,7 @@ app.get('/api/search', async (req, res) => {
         snippet: v.snippet
     })).sort((a, b) => b.score - a.score);
 
-    const topPicks = scored.slice(0, 5);
+    const topPicks = scored.slice(0, 8);
     res.json(topPicks);
 });
 app.get(/.*/, (req, res) => {
