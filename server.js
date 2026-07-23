@@ -93,11 +93,16 @@ async function fetchTopicResults(query) {
             const searchData = await searchRes.json();
 
             if (searchData.error) {
-                console.error(`API Key (${apiKey ? apiKey.substring(0, 6) : 'MISSING'}...) returned error:`, searchData.error);
-                if (searchData.error.code === 403) {
-                    console.warn(`Quota limit reached for key, trying next key...`);
+                const errCode = searchData.error.code;
+                const errReason = searchData.error.errors?.[0]?.reason;
+
+                // Catch both 403 and 429 quota/rate limit errors to trigger rotation
+                if (errCode === 403 || errCode === 429 || errReason === 'rateLimitExceeded' || errReason === 'quotaExceeded') {
+                    console.warn(`Quota/rate limit reached for key (${apiKey ? apiKey.substring(0, 6) : ''}...), trying next key...`);
                     continue;
                 }
+
+                console.error(`API Error:`, searchData.error);
                 return [];
             }
 
@@ -118,7 +123,6 @@ async function fetchTopicResults(query) {
 
     return [];
 }
-
 app.get('/api/search', async (req, res) => {
     const input = (req.query.q || '').trim();
     if (!input) return res.status(400).json({ error: 'Query parameter required' });
