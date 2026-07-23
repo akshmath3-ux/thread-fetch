@@ -710,7 +710,22 @@
             iframe.src = '';
             modal.style.display = 'none';
         }
+        function switchTab(tabName) {
+            currentTab = tabName;
 
+            // Update active button styles
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            if (tabName === 'history') {
+                document.getElementById('tabHistory')?.classList.add('active');
+                renderVideos(watchedVideos);
+            } else if (tabName === 'saved') {
+                document.getElementById('tabSaved')?.classList.add('active');
+                renderVideos(savedVideos);
+            } else {
+                document.getElementById('tabSearch')?.classList.add('active');
+                renderVideos(currentSearchResults);
+            }
+        }
         function toggleSave(videoObj) {
             const index = savedVideos.findIndex(sv => sv.id === videoObj.id);
 
