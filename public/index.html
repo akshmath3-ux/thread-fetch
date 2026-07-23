@@ -394,6 +394,27 @@
 </head>
 
 <body>
+    <!-- Pomodoro Timer Container -->
+    <div id="pomodoro-container"
+        style="background: var(--card-bg); padding: 1rem; border-radius: 8px; text-align: center; max-width: 300px; margin: 0 auto 1.5rem auto; border: 1px solid var(--border-color);">
+        <h3
+            style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 1px;">
+            Focus Session</h3>
+
+        <div id="timer-display"
+            style="font-size: 2.5rem; font-weight: bold; color: var(--accent-blue); margin-bottom: 1rem;">
+            25:00
+        </div>
+
+        <div>
+            <button onclick="startTimer()"
+                style="background: var(--accent-blue); color: #fff; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; font-weight: bold; margin-right: 0.5rem;">Start</button>
+            <button onclick="pauseTimer()"
+                style="background: var(--card-hover); color: var(--text-main); border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; margin-right: 0.5rem;">Pause</button>
+            <button onclick="resetTimer()"
+                style="background: transparent; color: var(--text-muted); border: 1px solid var(--border-color); padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer;">Reset</button>
+        </div>
+    </div>
 
     <div class="container">
         <!-- Header -->
@@ -403,6 +424,8 @@
                 <h1>FocusHub</h1>
             </div>
             <div class="nav-tabs">
+                <button class="tab-btn" id="tabHistory" onclick="switchTab('history')">History <span
+                        id="historyCount">0</span></button>
                 <button class="tab-btn active" id="tabSearch" onclick="switchTab('search')">Search Feed</button>
                 <button class="tab-btn" id="tabSaved" onclick="switchTab('saved')">Saved (<span
                         id="savedCount">0</span>)</button>
@@ -462,11 +485,68 @@
     </div>
 
     <script>
+        // --- Pomodoro Timer Logic ---
+
+        let timeLeft = 1500; // 25 minutes in seconds (25 * 60)
+        let timerInterval = null;
+        let isRunning = false;
+
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            const formattedTime = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            document.getElementById('timer-display').innerText = formattedTime;
+        }
+
+        function startTimer() {
+            if (isRunning) return;
+            isRunning = true;
+
+            timerInterval = setInterval(() => {
+                if (timeLeft > 0) {
+                    timeLeft--;
+                    updateTimerDisplay();
+                } else {
+                    clearInterval(timerInterval);
+                    isRunning = false;
+                    alert("Great focus! Time to take a 5-minute break.");
+                }
+            }, 1000);
+        }
+
+        function pauseTimer() {
+            clearInterval(timerInterval);
+            isRunning = false;
+        }
+
+        function resetTimer() {
+            clearInterval(timerInterval);
+            isRunning = false;
+            timeLeft = 1500;
+            updateTimerDisplay();
+        }
         let currentTab = 'search';
         let currentQuery = '';
         let currentSearchResults = [];
         let savedVideos = [];
+        let watchedVideos = [];
+        try {
+            watchedVideos = JSON.parse(localStorage.getItem('focushub_watched')) || [];
+        } catch (e) {
+            watchedVideos = [];
+        }
+        function addToWatchHistory(videoObj) {
+            // Remove if it's already in history so we don't have duplicates, then add to the front
+            watchedVideos = watchedVideos.filter(v => v.id !== videoObj.id);
+            watchedVideos.unshift(videoObj);
 
+            // Keep only the last 20 watched videos
+            if (watchedVideos.length > 20) {
+                watchedVideos.pop();
+            }
+
+            localStorage.setItem('focushub_watched', JSON.stringify(watchedVideos));
+        }
         try {
             savedVideos = JSON.parse(localStorage.getItem('focushub_saved') || '[]');
         } catch (e) {
@@ -545,7 +625,7 @@
             <div class="channel-name"></div>
             
             <div class="card-actions">
-              <button class="action-btn" onclick="openPlayer('${id}')">▶ Watch</button>
+              <button class="action-btn" onclick='openPlayerWithHistory(${JSON.stringify(videoDataObj)})'>Watch</button>
               <button class="action-btn" onclick="toggleSummary('${id}')">✨ Summary</button>
             </div>
 
@@ -569,10 +649,14 @@
             });
         }
 
-        function openPlayer(videoId) {
+        function openPlayerWithHistory(videoObj) {
+            // 1. Record to history array and update storage
+            addToWatchHistory(videoObj);
+
+            // 2. Open the player modal
             const modal = document.getElementById('playerModal');
             const iframe = document.getElementById('youtubeIframe');
-            iframe.src = `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0`;
+            iframe.src = `https://www.youtube-nocookie.com/embed/${videoObj.id}?autoplay=1&rel=0`;
             modal.style.display = 'flex';
         }
 
