@@ -196,11 +196,9 @@ function scoreVideo(video, channelCounts) {
     for (const phrase of GOOD_TITLE_PHRASES) {
         if (title.includes(phrase)) phraseMatches++;
     }
-    // Reduced from 15/match (max 30) to 8/match (max 16) after finding the phrase
-    // list was biased toward UX/tech-style titles — it should nudge the score,
-    // not dominate it, since we now know it doesn't generalize evenly across niches.
-    score += Math.min(phraseMatches, 2) * 8;
 
+    // Give a baseline score even if it doesn't match strict title phrases
+    score += 30 + (Math.min(phraseMatches, 2) * 8);
     if (views > 0) {
         score += Math.log10(views) * 4;
     }
