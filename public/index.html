@@ -565,6 +565,13 @@
         } catch (e) {
             watchedVideos = [];
         }
+        function updateCounts() {
+            const historyBtn = document.querySelector('button[onclick*="history"]');
+            if (historyBtn) historyBtn.innerText = `History (${watchedVideos.length})`;
+
+            const savedBtn = document.querySelector('button[onclick*="saved"]');
+            if (savedBtn) savedBtn.innerText = `Saved (${savedVideos.length})`;
+        }
         function addToWatchHistory(videoObj) {
             const incomingId = videoObj.id?.videoId || videoObj.id;
 
