@@ -395,24 +395,40 @@
 
 <body>
     <!-- Pomodoro Timer Container -->
-    <div id="pomodoro-container"
-        style="background: var(--card-bg); padding: 1rem; border-radius: 8px; text-align: center; max-width: 300px; margin: 0 auto 1.5rem auto; border: 1px solid var(--border-color);">
-        <h3
-            style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 1px;">
-            Focus Session</h3>
+    <div class="focus-timer-container"
+        style="background: var(--bg-card); padding: 1.5rem; border-radius: 12px; text-align: center; max-width: 500px; margin: 0 auto 2rem auto; border: 1px solid var(--border-color);">
+        <h3 id="timerLabel"
+            style="margin-bottom: 0.5rem; color: var(--text-main); font-size: 0.9rem; text-transform: uppercase;">Focus
+            Session</h3>
+        <div id="timerDisplay"
+            style="font-size: 3rem; font-weight: bold; color: var(--accent-color); margin-bottom: 1rem;">25:00</div>
 
-        <div id="timer-display"
-            style="font-size: 2.5rem; font-weight: bold; color: var(--accent-blue); margin-bottom: 1rem;">
-            25:00
+        <!-- Duration Customization Buttons -->
+        <div style="margin-bottom: 1rem; display: flex; justify-content: center; gap: 0.5rem; flex-wrap: wrap;">
+            <button onclick="setTimerDuration(15)"
+                style="padding: 0.4rem 0.8rem; background: var(--bg-dark); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer;">15m</button>
+            <button onclick="setTimerDuration(25)"
+                style="padding: 0.4rem 0.8rem; background: var(--bg-dark); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer;">25m</button>
+            <button onclick="setTimerDuration(45)"
+                style="padding: 0.4rem 0.8rem; background: var(--bg-dark); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer;">45m</button>
+            <button onclick="setTimerDuration(60)"
+                style="padding: 0.4rem 0.8rem; background: var(--bg-dark); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer;">60m</button>
         </div>
 
-        <div>
-            <button onclick="startTimer()"
-                style="background: var(--accent-blue); color: #fff; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; font-weight: bold; margin-right: 0.5rem;">Start</button>
+        <!-- Break and Control Buttons -->
+        <div style="display: flex; justify-content: center; gap: 0.5rem; flex-wrap: wrap;">
+            <button onclick="startTimer()" id="startBtn"
+                style="padding: 0.5rem 1.2rem; background: #2563EB; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Start</button>
             <button onclick="pauseTimer()"
-                style="background: var(--card-hover); color: var(--text-main); border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; margin-right: 0.5rem;">Pause</button>
+                style="padding: 0.5rem 1.2rem; background: var(--bg-dark); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer;">Pause</button>
             <button onclick="resetTimer()"
-                style="background: transparent; color: var(--text-muted); border: 1px solid var(--border-color); padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer;">Reset</button>
+                style="padding: 0.5rem 1.2rem; background: var(--bg-dark); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer;">Reset</button>
+            <button onclick="startBreak(5)"
+                style="padding: 0.5rem 1.2rem; background: #059669; color: white; border: none; border-radius: 6px; cursor: pointer;">Short
+                Break (5m)</button>
+            <button onclick="startBreak(15)"
+                style="padding: 0.5rem 1.2rem; background: #0D9488; color: white; border: none; border-radius: 6px; cursor: pointer;">Long
+                Break (15m)</button>
         </div>
     </div>
 
@@ -537,43 +553,63 @@
                 }
             }
         }
-        let timeLeft = 1500; // 25 minutes in seconds (25 * 60)
+        let totalSeconds = 25 * 60;
+        let remainingSeconds = totalSeconds;
         let timerInterval = null;
         let isRunning = false;
+        let currentMode = 'Focus Session';
 
-        function updateTimerDisplay() {
-            const minutes = Math.floor(timeLeft / 60);
-            const seconds = timeLeft % 60;
-            const formattedTime = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-            document.getElementById('timer-display').innerText = formattedTime;
+        function updateDisplay() {
+            const minutes = Math.floor(remainingSeconds / 60);
+            const seconds = remainingSeconds % 60;
+            document.getElementById('timer-display').innerText =
+                `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+
+        function setTimerDuration(minutes) {
+            pauseTimer();
+            currentMode = 'Focus Session';
+            const label = document.getElementById('timerLabel');
+            if (label) label.innerText = currentMode;
+            totalSeconds = minutes * 60;
+            remainingSeconds = totalSeconds;
+            updateDisplay();
+        }
+
+        function startBreak(minutes) {
+            pauseTimer();
+            currentMode = minutes === 5 ? 'Short Break' : 'Long Break';
+            const label = document.getElementById('timerLabel');
+            if (label) label.innerText = currentMode;
+            totalSeconds = minutes * 60;
+            remainingSeconds = totalSeconds;
+            updateDisplay();
+            startTimer();
         }
 
         function startTimer() {
             if (isRunning) return;
             isRunning = true;
-
             timerInterval = setInterval(() => {
-                if (timeLeft > 0) {
-                    timeLeft--;
-                    updateTimerDisplay();
+                if (remainingSeconds > 0) {
+                    remainingSeconds--;
+                    updateDisplay();
                 } else {
-                    clearInterval(timerInterval);
-                    isRunning = false;
-                    alert("Great focus! Time to take a 5-minute break.");
+                    pauseTimer();
+                    alert(`${currentMode} finished! Time for a change.`);
                 }
             }, 1000);
         }
 
         function pauseTimer() {
-            clearInterval(timerInterval);
             isRunning = false;
+            clearInterval(timerInterval);
         }
 
         function resetTimer() {
-            clearInterval(timerInterval);
-            isRunning = false;
-            timeLeft = 1500;
-            updateTimerDisplay();
+            pauseTimer();
+            remainingSeconds = totalSeconds;
+            updateDisplay();
         }
         let currentTab = 'search';
         let currentQuery = '';
