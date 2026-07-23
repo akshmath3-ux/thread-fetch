@@ -627,22 +627,29 @@
         updateSavedCount();
 
         async function executeSearch() {
-            const query = document.getElementById('searchInput').value.trim();
-            if (!query) return;
+            const rawQuery = document.getElementById('searchInput').value.trim();
+            if (!rawQuery) return;
+
+            // Universally enhance short/broad queries to ensure educational content surfaces
+            let enhancedQuery = rawQuery;
+            const words = rawQuery.split(' ');
+            if (words.length <= 2) {
+                enhancedQuery = `${rawQuery} tutorial guide lecture course`;
+            }
 
             const duration = document.getElementById('durationFilter').value;
-            currentQuery = query.toLowerCase();
+            currentQuery = rawQuery.toLowerCase();
             const grid = document.getElementById('videoGrid');
-            grid.innerHTML = '<p style="color: var(--text-muted); grid-column: 1/-1; text-align: center;">Searching videos...</p>';
+            grid.innerHTML = '<p style="color: var(--text-muted); grid-column: 1/-1; text-align: center;">Searching educational videos...</p>';
 
             try {
-                const res = await fetch(`/api/search?q=${encodeURIComponent(query)}&duration=${duration}`);
+                const res = await fetch(`/api/search?q=${encodeURIComponent(enhancedQuery)}&duration=${duration}`);
                 const data = await res.json();
 
                 currentSearchResults = Array.isArray(data) ? data : (data.results || []);
 
                 if (!currentSearchResults || currentSearchResults.length === 0) {
-                    grid.innerHTML = '<p style="color: var(--text-muted); grid-column: 1/-1; text-align: center;">No videos found.</p>';
+                    grid.innerHTML = '<p style="color: var(--text-muted); grid-column: 1/-1; text-align: center;">No educational videos found.</p>';
                     document.getElementById('nextTopicsSection').style.display = 'none';
                     return;
                 }
