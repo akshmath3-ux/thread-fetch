@@ -486,7 +486,37 @@
 
     <script>
         // --- Pomodoro Timer Logic ---
+        function handleWatch(id) {
+            // Find the video object from whichever list is currently active or search results
+            let videoObj = currentSearchResults.find(v => (v.id?.videoId || v.id) === id);
+            if (!videoObj && typeof savedVideos !== 'undefined') {
+                videoObj = savedVideos.find(v => (v.id?.videoId || v.id) === id);
+            }
+            if (!videoObj && typeof watchedVideos !== 'undefined') {
+                videoObj = watchedVideos.find(v => (v.id?.videoId || v.id) === id);
+            }
 
+            if (videoObj) {
+                // Normalize ID format just in case
+                const cleanId = videoObj.id?.videoId || videoObj.id;
+                const normalizedObj = {
+                    id: cleanId,
+                    title: videoObj.title || videoObj.snippet?.title,
+                    channel: videoObj.channel || videoObj.snippet?.channelTitle,
+                    thumbnail: videoObj.thumbnail || videoObj.snippet?.thumbnails?.high?.url || videoObj.snippet?.thumbnails?.medium?.url,
+                    description: videoObj.description || videoObj.snippet?.description
+                };
+
+                addToWatchHistory(normalizedObj);
+
+                const modal = document.getElementById('playerModal');
+                const iframe = document.getElementById('youtubeIframe');
+                if (iframe && modal) {
+                    iframe.src = `https://www.youtube-nocookie.com/embed/${cleanId}?autoplay=1&rel=0`;
+                    modal.style.display = 'flex';
+                }
+            }
+        }
         let timeLeft = 1500; // 25 minutes in seconds (25 * 60)
         let timerInterval = null;
         let isRunning = false;
@@ -625,6 +655,7 @@
             <div class="channel-name"></div>
             
             <div class="card-actions">
+                <button class="action-btn" onclick="handleWatch('${id}')">Watch</button>
               <button class="action-btn" onclick='openPlayerWithHistory(${JSON.stringify(videoDataObj)})'>Watch</button>
               <button class="action-btn" onclick="toggleSummary('${id}')">✨ Summary</button>
             </div>
