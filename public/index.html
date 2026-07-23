@@ -2,265 +2,553 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Distraction-Free Career & Learning Hub</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FocusHub Learning</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #0f172a;
-            --card-bg: #1e293b;
-            --accent: #38bdf8;
-            --text: #f8fafc;
-            --text-muted: #94a3b8;
+            --bg-dark: #0B0F17;
+            --card-bg: #161B26;
+            --card-hover: #1F2636;
+            --accent-blue: #0088FF;
+            --accent-glow: rgba(0, 136, 255, 0.25);
+            --text-main: #F1F5F9;
+            --text-muted: #94A3B8;
+            --border-color: #262D3D;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
         }
 
         body {
-            font-family: system-ui, -apple-system, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            margin: 0;
-            padding: 2rem;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 2rem 1rem;
         }
 
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        /* Header & Navigation */
         header {
-            text-align: center;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 2rem;
         }
 
-        h1 {
-            color: var(--accent);
-            margin-bottom: 0.5rem;
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
         }
 
-        p {
+        .brand h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #38BDF8, #0088FF);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 0.5rem;
+            background: var(--card-bg);
+            padding: 0.25rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+
+        .tab-btn.active {
+            background: var(--accent-blue);
+            color: #FFF;
+            box-shadow: 0 0 12px var(--accent-glow);
+        }
+
+        /* Search & Controls Section */
+        .search-box {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            margin-bottom: 2rem;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .search-input {
+            flex: 1;
+            background: #0F131C;
+            border: 1px solid var(--border-color);
+            padding: 0.85rem 1.25rem;
+            border-radius: 10px;
+            color: #FFF;
+            font-size: 1rem;
+            outline: none;
+            transition: border 0.2s;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-blue);
+        }
+
+        .search-btn {
+            background: var(--accent-blue);
+            color: #FFF;
+            border: none;
+            padding: 0.85rem 1.5rem;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.1s, box-shadow 0.2s;
+        }
+
+        .search-btn:hover {
+            box-shadow: 0 0 16px var(--accent-glow);
+            transform: translateY(-1px);
+        }
+
+        /* Filters Row */
+        .controls-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
             color: var(--text-muted);
         }
 
-        .search-box {
-            display: flex;
-            gap: 10px;
-            width: 100%;
-            max-width: 600px;
-            margin-bottom: 1.5rem;
-        }
-
-        input[type="text"] {
-            flex: 1;
-            padding: 12px 16px;
+        .duration-select {
+            background: #0F131C;
+            color: #FFF;
+            border: 1px solid var(--border-color);
+            padding: 0.4rem 0.75rem;
             border-radius: 8px;
-            border: 1px solid #334155;
-            background: #1e293b;
-            color: var(--text);
-            font-size: 1rem;
-        }
-
-        button {
-            padding: 12px 24px;
-            border-radius: 8px;
-            border: none;
-            background: var(--accent);
-            color: #0f172a;
-            font-weight: bold;
+            outline: none;
             cursor: pointer;
-            font-size: 1rem;
         }
 
-        button:hover {
-            opacity: 0.9;
-        }
-
-        .chips {
+        /* Preset Quick Pills */
+        .preset-pills {
             display: flex;
+            gap: 0.5rem;
             flex-wrap: wrap;
-            gap: 8px;
-            justify-content: center;
-            max-width: 600px;
-            margin-bottom: 2rem;
         }
 
-        .chip {
-            background: #334155;
-            padding: 6px 14px;
+        .pill {
+            background: #0F131C;
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            padding: 0.4rem 0.85rem;
             border-radius: 20px;
-            font-size: 0.875rem;
+            font-size: 0.85rem;
             cursor: pointer;
-            text-transform: capitalize;
+            transition: all 0.2s;
         }
 
-        .chip:hover {
-            background: var(--accent);
-            color: #0f172a;
+        .pill:hover {
+            border-color: var(--accent-blue);
+            color: var(--text-main);
         }
 
-        .grid {
+        /* Video Feed Grid */
+        .video-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
             gap: 1.5rem;
-            width: 100%;
-            max-width: 1000px;
+            margin-bottom: 3rem;
         }
 
-        .card {
+        .video-card {
             background: var(--card-bg);
-            border-radius: 12px;
+            border-radius: 14px;
+            border: 1px solid var(--border-color);
             overflow: hidden;
             display: flex;
             flex-direction: column;
+            transition: transform 0.2s, border-color 0.2s;
+            position: relative;
         }
 
-        .card img {
+        .video-card:hover {
+            transform: translateY(-4px);
+            border-color: #3B82F6;
+        }
+
+        .thumb-container {
+            position: relative;
             width: 100%;
-            height: 180px;
+            aspect-ratio: 16/9;
+        }
+
+        .thumb-container img {
+            width: 100%;
+            height: 100%;
             object-fit: cover;
         }
 
-        .card-body {
+        .bookmark-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(11, 15, 23, 0.8);
+            border: 1px solid var(--border-color);
+            color: #FFF;
+            padding: 0.4rem 0.6rem;
+            border-radius: 8px;
+            cursor: pointer;
+            backdrop-filter: blur(4px);
+            font-size: 0.875rem;
+            transition: background 0.2s;
+        }
+
+        .bookmark-btn.saved {
+            background: #EF4444;
+            border-color: #EF4444;
+        }
+
+        .video-info {
             padding: 1rem;
             display: flex;
             flex-direction: column;
-            flex-grow: 1;
+            flex: 1;
+            justify-content: space-between;
         }
 
-        .card-title {
-            font-size: 1.1rem;
-            font-weight: bold;
+        .video-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            line-height: 1.4;
             margin-bottom: 0.5rem;
+            color: var(--text-main);
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
         }
 
-        .card-meta {
-            font-size: 0.85rem;
+        .channel-name {
+            font-size: 0.8rem;
             color: var(--text-muted);
             margin-bottom: 1rem;
         }
 
-        .card-btn {
-            margin-top: auto;
-            text-align: center;
-            background: #334155;
-            color: var(--text);
-            text-decoration: none;
-            padding: 10px;
-            border-radius: 6px;
+        .card-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .action-btn {
+            flex: 1;
+            background: #0F131C;
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 0.5rem;
+            border-radius: 8px;
+            font-size: 0.8rem;
             font-weight: 500;
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+            transition: background 0.2s;
         }
 
-        .card-btn:hover {
-            background: var(--accent);
-            color: #0f172a;
+        .action-btn:hover {
+            background: var(--border-color);
         }
 
-        #player-container {
+        /* Summary Modal Drawer */
+        .summary-box {
+            background: #0F131C;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.75rem;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 0.75rem;
             display: none;
-            width: 100%;
-            max-width: 800px;
-            margin-bottom: 2rem;
+            line-height: 1.5;
         }
 
-        .iframe-wrapper {
-            position: relative;
-            padding-bottom: 56.25%;
-            /* 16:9 aspect ratio */
-            height: 0;
-            overflow: hidden;
-            border-radius: 12px;
+        /* Next Topics Drawer */
+        .next-topics {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-align: center;
+            display: none;
         }
 
-        .iframe-wrapper iframe {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            border: 0;
+        .next-topics h3 {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            color: var(--text-main);
+        }
+
+        .topic-pills {
+            display: flex;
+            justify-content: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
         }
     </style>
 </head>
 
 <body>
 
-    <header>
-        <h1>FocusHub Learning</h1>
-        <p>Distraction-free career discovery & learning videos</p>
-    </header>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <div class="brand">
+                <span style="font-size: 1.8rem;">🎯</span>
+                <h1>FocusHub</h1>
+            </div>
+            <div class="nav-tabs">
+                <button class="tab-btn active" id="tabSearch" onclick="switchTab('search')">Search Feed</button>
+                <button class="tab-btn" id="tabSaved" onclick="switchTab('saved')">Saved (<span
+                        id="savedCount">0</span>)</button>
+            </div>
+        </header>
 
-    <div class="search-box">
-        <input type="text" id="queryInput" placeholder="Search a topic or career...">
-        <button onclick="performSearch()">Search</button>
-    </div>
+        <!-- Search Controls -->
+        <div class="search-box" id="searchBoxSection">
+            <div class="input-group">
+                <input type="text" id="searchInput" class="search-input"
+                    placeholder="What do you want to learn today? (e.g. Design, Python, Calculus)" />
+                <button class="search-btn" onclick="executeSearch()">Search</button>
+            </div>
 
-    <div class="chips">
-        <span class="chip" onclick="searchTopic('gaming')">Gaming</span>
-        <span class="chip" onclick="searchTopic('design')">Design</span>
-        <span class="chip" onclick="searchTopic('business')">Business</span>
-        <span class="chip" onclick="searchTopic('science')">Science</span>
-        <span class="chip" onclick="searchTopic('writing')">Writing</span>
-        <span class="chip" onclick="searchTopic('people')">People</span>
-        <span class="chip" onclick="searchTopic('building')">Building</span>
-        <span class="chip" onclick="searchTopic('numbers')">Numbers</span>
-        <span class="chip" onclick="searchTopic('start')">✨ Cold Start</span>
-    </div>
+            <div class="controls-row">
+                <!-- Preset Pills -->
+                <div class="preset-pills">
+                    <span class="pill" onclick="quickSearch('Design')">🎨 Design</span>
+                    <span class="pill" onclick="quickSearch('Gaming')">🎮 Gaming</span>
+                    <span class="pill" onclick="quickSearch('Coding')">💻 Coding</span>
+                    <span class="pill" onclick="quickSearch('Science')">🔬 Science</span>
+                </div>
 
-    <div id="player-container">
-        <div class="iframe-wrapper">
-            <iframe id="video-player" src="" allowfullscreen></iframe>
+                <!-- Duration Filter -->
+                <div class="filter-group">
+                    <label for="durationFilter">⏱️ Duration:</label>
+                    <select id="durationFilter" class="duration-select" onchange="executeSearch()">
+                        <option value="any">Any Length</option>
+                        <option value="short">Short (&lt; 4 mins)</option>
+                        <option value="medium">Medium (4 - 20 mins)</option>
+                        <option value="long">Long (&gt; 20 mins)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Video Grid -->
+        <div class="video-grid" id="videoGrid"></div>
+
+        <!-- Point 4: Smart Related Topic Pills -->
+        <div class="next-topics" id="nextTopicsSection">
+            <h3>🚀 Where to Next? Suggested Follow-up Topics:</h3>
+            <div class="topic-pills" id="topicPills"></div>
         </div>
     </div>
 
-    <div class="grid" id="results"></div>
-
     <script>
-        async function searchTopic(topic) {
-            document.getElementById('queryInput').value = topic;
-            performSearch();
-        }
+        let currentTab = 'search';
+        let currentQuery = '';
+        let savedVideos = JSON.parse(localStorage.getItem('focushub_saved') || '[]');
 
-        async function performSearch() {
-            const q = document.getElementById('queryInput').value.trim();
-            if (!q) return;
+        const TOPIC_RELATIONS = {
+            'design': ['Figma Basics', 'UI/UX Principles', 'Wireframing', 'Color Theory'],
+            'coding': ['Data Structures', 'Python Project', 'Web Dev Basics', 'Git & GitHub'],
+            'gaming': ['Game Engine Basics', 'Unity Tutorial', 'Unreal Engine', '3D Modeling'],
+            'science': ['Astrophysics', 'Quantum Mechanics', 'Biology Essentials', 'Neuroscience']
+        };
 
-            const resultsDiv = document.getElementById('results');
-            resultsDiv.innerHTML = '<p>Loading targeted content...</p>';
+        updateSavedCount();
+
+        async function executeSearch() {
+            const query = document.getElementById('searchInput').value.trim();
+            const duration = document.getElementById('durationFilter').value;
+            if (!query) return;
+
+            currentQuery = query.toLowerCase();
+            const grid = document.getElementById('videoGrid');
+            grid.innerHTML = '<p style="color: var(--text-muted); grid-column: 1/-1; text-align: center;">Searching safe learning videos...</p>';
 
             try {
-                const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
+                const res = await fetch(`/api/search?q=${encodeURIComponent(query)}&duration=${duration}`);
                 const data = await res.json();
 
-                resultsDiv.innerHTML = '';
+                // Support array response or object wrapper
+                const videos = Array.isArray(data) ? data : (data.results || []);
 
-                if (!data.results || data.results.length === 0) {
-                    resultsDiv.innerHTML = '<p>No safe videos found for this search.</p>';
+                if (!videos || videos.length === 0) {
+                    grid.innerHTML = '<p style="color: var(--text-muted); grid-column: 1/-1; text-align: center;">No safe videos found. Try another query!</p>';
+                    document.getElementById('nextTopicsSection').style.display = 'none';
                     return;
                 }
 
-                data.results.forEach(video => {
-                    const card = document.createElement('div');
-                    card.className = 'card';
-                    card.innerHTML = `
-            <img src="${video.thumbnail}" alt="${video.title}">
-            <div class="card-body">
-              <div class="card-title">${video.title}</div>
-              <div class="card-meta">
-                ${video.channel} • ${video.views} views • ${video.duration}
-              </div>
-              <button class="card-btn" onclick="playVideo('${video.id}')">Watch In-App</button>
-            </div>
-          `;
-                    resultsDiv.appendChild(card);
-                });
+                renderVideos(videos);
+                renderRelatedTopics(currentQuery);
             } catch (err) {
-                resultsDiv.innerHTML = '<p>Error loading videos. Please check your API setup.</p>';
+                grid.innerHTML = '<p style="color: #EF4444; grid-column: 1/-1; text-align: center;">Error loading videos. Please try again.</p>';
             }
         }
 
-        function playVideo(id) {
-            const container = document.getElementById('player-container');
-            const iframe = document.getElementById('video-player');
-            iframe.src = `https://www.youtube.com/embed/${id}?autoplay=1&rel=0`;
-            container.style.display = 'block';
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+        function quickSearch(term) {
+            document.getElementById('searchInput').value = term;
+            executeSearch();
+        }
+
+        function renderVideos(videos) {
+            const grid = document.getElementById('videoGrid');
+            grid.innerHTML = '';
+
+            videos.forEach(v => {
+                const id = v.id?.videoId || v.id;
+                const snippet = v.snippet || {};
+                const title = v.title || snippet.title || 'Untitled Video';
+                const channel = v.channel || snippet.channelTitle || 'Unknown Channel';
+                const thumb = v.thumbnail || snippet.thumbnails?.high?.url || snippet.thumbnails?.medium?.url || '';
+                const desc = snippet.description || 'No description available for summary.';
+
+                const isSaved = savedVideos.some(sv => sv.id === id);
+
+                const card = document.createElement('div');
+                card.className = 'video-card';
+                card.innerHTML = `
+          <div class="thumb-container">
+            <img src="${thumb}" alt="${title}" />
+            <button class="bookmark-btn ${isSaved ? 'saved' : ''}" onclick="toggleSave('${id}', '${escapeHtml(title)}', '${escapeHtml(channel)}', '${thumb}', '${escapeHtml(desc)}')">
+              ${isSaved ? '❤️ Saved' : '🔖 Save'}
+            </button>
+          </div>
+          <div class="video-info">
+            <div class="video-title">${title}</div>
+            <div class="channel-name">${channel}</div>
+            
+            <div class="card-actions">
+              <a href="https://www.youtube.com/watch?v=${id}" target="_blank" class="action-btn">▶ Watch</a>
+              <button class="action-btn" onclick="toggleSummary('${id}')">✨ Summary</button>
+            </div>
+
+            <div class="summary-box" id="summary-${id}">
+              <strong>📌 Key Takeaways:</strong>
+              <p style="margin-top: 0.4rem;">${desc.length > 180 ? desc.substring(0, 180) + '...' : desc}</p>
+            </div>
+          </div>
+        `;
+                grid.appendChild(card);
+            });
+        }
+
+        function toggleSave(id, title, channel, thumb, desc) {
+            const index = savedVideos.findIndex(v => v.id === id);
+            if (index > -1) {
+                savedVideos.splice(index, 1);
+            } else {
+                savedVideos.push({ id, title, channel, thumbnail: thumb, snippet: { description: desc } });
+            }
+
+            localStorage.setItem('focushub_saved', JSON.stringify(savedVideos));
+            updateSavedCount();
+
+            if (currentTab === 'saved') {
+                renderSavedTab();
+            } else {
+                executeSearch();
+            }
+        }
+
+        function updateSavedCount() {
+            document.getElementById('savedCount').innerText = savedVideos.length;
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            document.getElementById('tabSearch').classList.toggle('active', tab === 'search');
+            document.getElementById('tabSaved').classList.toggle('active', tab === 'saved');
+
+            if (tab === 'saved') {
+                document.getElementById('searchBoxSection').style.display = 'none';
+                document.getElementById('nextTopicsSection').style.display = 'none';
+                renderSavedTab();
+            } else {
+                document.getElementById('searchBoxSection').style.display = 'block';
+                document.getElementById('videoGrid').innerHTML = '';
+                if (currentQuery) executeSearch();
+            }
+        }
+
+        function renderSavedTab() {
+            const grid = document.getElementById('videoGrid');
+            if (savedVideos.length === 0) {
+                grid.innerHTML = '<p style="color: var(--text-muted); grid-column: 1/-1; text-align: center;">No saved videos yet. Click "🔖 Save" on any video card!</p>';
+                return;
+            }
+            renderVideos(savedVideos);
+        }
+
+        function toggleSummary(id) {
+            const box = document.getElementById(`summary-${id}`);
+            box.style.display = box.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function renderRelatedTopics(query) {
+            const section = document.getElementById('nextTopicsSection');
+            const container = document.getElementById('topicPills');
+
+            let matches = [];
+            Object.keys(TOPIC_RELATIONS).forEach(key => {
+                if (query.includes(key)) matches = TOPIC_RELATIONS[key];
+            });
+
+            if (matches.length === 0) {
+                section.style.display = 'none';
+                return;
+            }
+
+            container.innerHTML = matches.map(topic => `
+        <span class="pill" onclick="quickSearch('${topic}')">${topic}</span>
+      `).join('');
+
+            section.style.display = 'block';
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/'/g, "\\'").replace(/"/g, '&quot;');
         }
     </script>
 </body>

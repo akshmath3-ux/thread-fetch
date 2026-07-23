@@ -85,10 +85,14 @@ function scoreVideo(video, channelCounts) {
     return Math.round(score * 10) / 10;
 }
 
-async function fetchTopicResults(query) {
+async function fetchTopicResults(query, duration = 'any') {
     for (const apiKey of API_KEYS) {
         try {
-            const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(query)}&type=video&maxResults=10&key=${apiKey}`;
+            let searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(query)}&type=video&maxResults=10&key=${apiKey}`;
+            if (duration !== 'any') {
+                searchUrl += `&videoDuration=${duration}`;
+            }
+
             const searchRes = await fetch(searchUrl);
             const searchData = await searchRes.json();
 
@@ -96,9 +100,8 @@ async function fetchTopicResults(query) {
                 const errCode = searchData.error.code;
                 const errReason = searchData.error.errors?.[0]?.reason;
 
-                // Catch both 403 and 429 quota/rate limit errors to trigger rotation
                 if (errCode === 403 || errCode === 429 || errReason === 'rateLimitExceeded' || errReason === 'quotaExceeded') {
-                    console.warn(`Quota/rate limit reached for key (${apiKey ? apiKey.substring(0, 6) : ''}...), trying next key...`);
+                    console.warn(`Quota limit reached for key (${apiKey ? apiKey.substring(0, 6) : ''}...), trying next...`);
                     continue;
                 }
 
@@ -123,8 +126,10 @@ async function fetchTopicResults(query) {
 
     return [];
 }
+
 app.get('/api/search', async (req, res) => {
     const input = (req.query.q || '').trim();
+    const duration = req.query.duration || 'any';
     if (!input) return res.status(400).json({ error: 'Query parameter required' });
 
     const interestKey = input.toLowerCase();
@@ -135,7 +140,7 @@ app.get('/api/search', async (req, res) => {
 
     let allVideos = [];
     for (const query of queries) {
-        const results = await fetchTopicResults(query);
+        const results = await fetchTopicResults(query, duration);
         allVideos = allVideos.concat(results.map(v => ({ ...v, __sourceQuery: query })));
     }
 
@@ -166,10 +171,11 @@ app.get('/api/search', async (req, res) => {
         duration: formatDuration(v.contentDetails.duration),
         score: scoreVideo(v, channelCounts),
         sourceQuery: v.__sourceQuery,
+        snippet: v.snippet
     })).sort((a, b) => b.score - a.score);
 
     const topPicks = scored.slice(0, 5);
-    res.json({ query: input, results: topPicks });
+    res.json(topPicks);
 });
 app.get(/.*/, (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
