@@ -627,25 +627,32 @@
         updateSavedCount();
 
         async function executeSearch() {
-            const rawQuery = document.getElementById('searchInput').value.trim();
-            if (!rawQuery) return;
+            const query = document.getElementById('searchInput').value.trim();
+            if (!query) return;
 
-            // Append educational context keywords to ensure tutorials/guides show up
-            const educationalQuery = `${rawQuery} tutorial guide course how to`;
             const duration = document.getElementById('durationFilter').value;
+            currentQuery = query.toLowerCase();
+            const grid = document.getElementById('videoGrid');
+            grid.innerHTML = '<p style="color: var(--text-muted); grid-column: 1/-1; text-align: center;">Searching videos...</p>';
 
-            // Pass educationalQuery to your fetch request
             try {
-                const response = await fetch(`/api/search?q=${encodeURIComponent(educationalQuery)}&duration=${duration}`);
-                const data = await response.json();
+                const res = await fetch(`/api/search?q=${encodeURIComponent(query)}&duration=${duration}`);
+                const data = await res.json();
 
-                currentSearchResults = data.items || [];
+                currentSearchResults = Array.isArray(data) ? data : (data.results || []);
+
+                if (!currentSearchResults || currentSearchResults.length === 0) {
+                    grid.innerHTML = '<p style="color: var(--text-muted); grid-column: 1/-1; text-align: center;">No videos found.</p>';
+                    document.getElementById('nextTopicsSection').style.display = 'none';
+                    return;
+                }
+
                 renderVideos(currentSearchResults);
-            } catch (error) {
-                console.err('Search failed:', error);
+                renderRelatedTopics(currentQuery);
+            } catch (err) {
+                grid.innerHTML = '<p style="color: #EF4444; grid-column: 1/-1; text-align: center;">Error loading videos.</p>';
             }
         }
-
         function quickSearch(term) {
             document.getElementById('searchInput').value = term;
             executeSearch();
