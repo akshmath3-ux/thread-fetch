@@ -3,12 +3,68 @@
 // Usage (specific topic):  node fetch.js "UX designer day in the life"
 
 import 'dotenv/config';
+// --- NEW ---
+const API_KEYS = (process.env.YOUTUBE_API_KEYS || process.env.YOUTUBE_API_KEY || '')
+    .split(',')
+    .map(k => k.trim())
+    .filter(Boolean);
 
-const API_KEY = process.env.YOUTUBE_API_KEY;
+let currentKeyIndex = 0;
+
+function getApiKey() {
+    return API_KEYS[currentKeyIndex];
+}
+
+function rotateApiKey() {
+    if (API_KEYS.length <= 1) return;
+    currentKeyIndex = (currentKeyIndex + 1) % API_KEYS.length;
+    console.log(`[Quota Limit] Rotated to API key index: ${currentKeyIndex}`);
+}
+
+async function fetchWithKeyRotation(urlBuilder) {
+    let attempts = 0;
+    const maxAttempts = API_KEYS.length || 1;
+
+    console.log(`Loaded ${API_KEYS.length} key(s) from environment.`);
+
+    while (attempts < maxAttempts) {
+        const key = getApiKey();
+        if (!key) break;
+        const targetUrl = urlBuilder(key);
+
+        try {
+            const response = await fetch(targetUrl);
+            const data = await response.json();
+
+            if (response.status === 403 || (data.error && data.error.code === 403)) {
+                console.warn(`Key index ${currentKeyIndex} hit quota limit or error:`, data.error?.message);
+                rotateApiKey();
+                attempts++;
+                continue;
+            }
+
+            if (data.error) {
+                console.warn(`API Error with key index ${currentKeyIndex}:`, data.error.message);
+                rotateApiKey();
+                attempts++;
+                continue;
+            }
+
+            return data;
+        } catch (err) {
+            console.error(`Fetch error with key index ${currentKeyIndex}:`, err);
+            rotateApiKey();
+            attempts++;
+        }
+    }
+
+    throw new Error("All YouTube API keys have exhausted their daily quotas or are invalid.");
+}
+
 const input = process.argv.slice(2).join(' ');
 
-if (!API_KEY) {
-    console.error('Missing YOUTUBE_API_KEY. Check your .env file.');
+if (API_KEYS.length === 0) {
+    console.error('Missing YOUTUBE_API_KEYS in .env file.');
     process.exit(1);
 }
 
@@ -160,29 +216,29 @@ function scoreVideo(video, channelCounts) {
 // ---------- one search + details call for a single query ----------
 // (this is exactly what the Day 3-5 script did, now wrapped as a reusable function)
 
+// --- NEW ---
 async function fetchTopicResults(query) {
-    const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(query)}&type=video&maxResults=20&key=${API_KEY}`;
-    const searchRes = await fetch(searchUrl);
-    const searchData = await searchRes.json();
+    try {
+        const searchData = await fetchWithKeyRotation((key) =>
+            `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=10&q=${encodeURIComponent(query)}&type=video&key=${key}`
+        );
 
-    if (searchData.error) {
-        console.error(`Search error for "${query}":`, searchData.error.message);
+        if (!searchData || !searchData.items || searchData.items.length === 0) {
+            return [];
+        }
+
+        const videoIds = searchData.items.map(item => item.id.videoId).filter(Boolean).join(',');
+        if (!videoIds) return [];
+
+        const detailsData = await fetchWithKeyRotation((key) =>
+            `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics,contentDetails&id=${videoIds}&key=${key}`
+        );
+
+        return detailsData?.items || [];
+    } catch (err) {
+        console.error(`Error in fetchTopicResults for "${query}":`, err.message);
         return [];
     }
-
-    const videoIds = searchData.items.map(item => item.id.videoId).join(',');
-    if (!videoIds) return [];
-
-    const detailsUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics,contentDetails&id=${videoIds}&key=${API_KEY}`;
-    const detailsRes = await fetch(detailsUrl);
-    const detailsData = await detailsRes.json();
-
-    if (detailsData.error) {
-        console.error(`Details error for "${query}":`, detailsData.error.message);
-        return [];
-    }
-
-    return detailsData.items;
 }
 
 // ---------- main ----------
