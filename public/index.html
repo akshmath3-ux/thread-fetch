@@ -616,45 +616,41 @@
 
         // Ensure tab switching handles the new 'notes' section cleanly
         function switchTab(tabName) {
-            // Hide all potential tab sections
-            ['search', 'history', 'saved', 'notes'].forEach(t => {
-                const sec = document.getElementById(`${t}Section`) || document.getElementById(t);
-                if (sec) sec.style.display = 'none';
-            });
+            // Hide all sections explicitly
+            const searchSec = document.getElementById('searchBoxSection');
+            const feedSec = document.getElementById('feedSection') || document.getElementById('searchResults');
+            const historySec = document.getElementById('historySection');
+            const savedSec = document.getElementById('savedSection');
+            const notesSec = document.getElementById('notesSection');
+
+            if (searchSec) searchSec.style.display = 'none';
+            if (feedSec) feedSec.style.display = 'none';
+            if (historySec) historySec.style.display = 'none';
+            if (savedSec) savedSec.style.display = 'none';
+            if (notesSec) notesSec.style.display = 'none';
 
             // Remove active state from all tab buttons
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
 
-            // Activate the selected tab button and show its section
+            // Activate the correct button
             const targetBtn = document.getElementById(`tab${tabName.charAt(0).toUpperCase() + tabName.slice(1)}`);
             if (targetBtn) targetBtn.classList.add('active');
 
+            // Show the requested section
             if (tabName === 'search') {
-                const searchSec = document.getElementById('searchBoxSection');
                 if (searchSec) searchSec.style.display = 'block';
-                // Re-show search results container if your app uses one
-                const feedSec = document.getElementById('feedSection') || document.getElementById('searchResults');
                 if (feedSec) feedSec.style.display = 'block';
-            } else {
-                // Hide search input/feed controls for non-search tabs if needed
-                const searchSec = document.getElementById('searchBoxSection');
-                if (searchSec) searchSec.style.display = 'none';
-            }
-
-            const targetSec = document.getElementById(`${tabName}Section`);
-            if (targetSec) {
-                targetSec.style.display = 'block';
-            }
-
-            if (tabName === 'notes') {
+            } else if (tabName === 'history') {
+                if (historySec) historySec.style.display = 'block';
+                if (typeof renderHistory === 'function') renderHistory();
+            } else if (tabName === 'saved') {
+                if (savedSec) savedSec.style.display = 'block';
+                if (typeof renderSaved === 'function') renderSaved();
+            } else if (tabName === 'notes') {
+                if (notesSec) notesSec.style.display = 'block';
                 renderNotesArchive();
-            } else if (tabName === 'history' && typeof renderHistory === 'function') {
-                renderHistory();
-            } else if (tabName === 'saved' && typeof renderSaved === 'function') {
-                renderSaved();
             }
         }
-
         function renderNotesArchive() {
             const grid = document.getElementById('notesGrid');
             if (!grid) return;
