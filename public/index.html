@@ -611,15 +611,42 @@
 
         // Ensure tab switching handles the new 'notes' section cleanly
         function switchTab(tabName) {
+            // Hide all potential tab sections
             ['search', 'history', 'saved', 'notes'].forEach(t => {
-                const sec = document.getElementById(`${t}Section`);
-                const btn = document.getElementById(`tab${t.charAt(0).toUpperCase() + t.slice(1)}`);
-                if (sec) sec.style.display = t === tabName ? 'block' : 'none';
-                if (btn) btn.classList.toggle('active', t === tabName);
+                const sec = document.getElementById(`${t}Section`) || document.getElementById(t);
+                if (sec) sec.style.display = 'none';
             });
+
+            // Remove active state from all tab buttons
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+
+            // Activate the selected tab button and show its section
+            const targetBtn = document.getElementById(`tab${tabName.charAt(0).toUpperCase() + tabName.slice(1)}`);
+            if (targetBtn) targetBtn.classList.add('active');
+
+            if (tabName === 'search') {
+                const searchSec = document.getElementById('searchBoxSection');
+                if (searchSec) searchSec.style.display = 'block';
+                // Re-show search results container if your app uses one
+                const feedSec = document.getElementById('feedSection') || document.getElementById('searchResults');
+                if (feedSec) feedSec.style.display = 'block';
+            } else {
+                // Hide search input/feed controls for non-search tabs if needed
+                const searchSec = document.getElementById('searchBoxSection');
+                if (searchSec) searchSec.style.display = 'none';
+            }
+
+            const targetSec = document.getElementById(`${tabName}Section`);
+            if (targetSec) {
+                targetSec.style.display = 'block';
+            }
 
             if (tabName === 'notes') {
                 renderNotesArchive();
+            } else if (tabName === 'history' && typeof renderHistory === 'function') {
+                renderHistory();
+            } else if (tabName === 'saved' && typeof renderSaved === 'function') {
+                renderSaved();
             }
         }
 
