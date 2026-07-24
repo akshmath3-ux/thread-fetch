@@ -447,99 +447,98 @@
 
 <body>
     <!-- Pomodoro Timer Container -->
-    <div class="focus-timer-container"
-        style="background: var(--bg-card); padding: 1.5rem; border-radius: 12px; text-align: center; max-width: 500px; margin: 0 auto 2rem auto; border: 1px solid var(--border-color);">
-        <h3 id="timerLabel"
-            style="margin-bottom: 0.5rem; color: var(--text-main); font-size: 0.9rem; text-transform: uppercase;">Focus
-            Session</h3>
-        <div id="timerDisplay"
-            style="font-size: 3rem; font-weight: bold; color: var(--accent-color); margin-bottom: 1rem;">25:00</div>
+    <!-- Top Header & Minimized Timer Bar -->
+    <div style="max-width: 800px; margin: 0 auto; padding: 20px 0; display: flex; flex-direction: column; gap: 15px;">
 
-        <!-- Duration Customization Buttons -->
-        <div style="margin-bottom: 1rem; display: flex; justify-content: center; gap: 0.5rem; flex-wrap: wrap;">
-            <button onclick="setTimerDuration(15)"
-                style="padding: 0.4rem 0.8rem; background: var(--bg-dark); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer;">15m</button>
-            <button onclick="setTimerDuration(25)"
-                style="padding: 0.4rem 0.8rem; background: var(--bg-dark); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer;">25m</button>
-            <button onclick="setTimerDuration(45)"
-                style="padding: 0.4rem 0.8rem; background: var(--bg-dark); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer;">45m</button>
-            <button onclick="setTimerDuration(60)"
-                style="padding: 0.4rem 0.8rem; background: var(--bg-dark); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer;">60m</button>
+        <!-- Minimized Timer Bar -->
+        <div
+            style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span
+                    style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Focus
+                    Timer</span>
+                <span id="minimizedTimerDisplay"
+                    style="font-size: 1.15rem; font-weight: 700; color: var(--text-main); font-family: monospace;">25:00</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+                <button onclick="setTimer(15)"
+                    style="background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-main); padding: 3px 8px; border-radius: 6px; font-size: 0.75rem; cursor: pointer;">15m</button>
+                <button onclick="setTimer(25)"
+                    style="background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-main); padding: 3px 8px; border-radius: 6px; font-size: 0.75rem; cursor: pointer;">25m</button>
+                <button onclick="setTimer(45)"
+                    style="background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-main); padding: 3px 8px; border-radius: 6px; font-size: 0.75rem; cursor: pointer;">45m</button>
+                <button id="startPauseBtn" onclick="toggleTimer()"
+                    style="background: var(--accent-primary, #007bff); border: none; color: white; padding: 3px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer;">Start</button>
+                <button onclick="resetTimer()"
+                    style="background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-muted); padding: 3px 8px; border-radius: 6px; font-size: 0.75rem; cursor: pointer;">Reset</button>
+            </div>
         </div>
 
-        <!-- Break and Control Buttons -->
-        <div style="display: flex; justify-content: center; gap: 0.5rem; flex-wrap: wrap;">
-            <button onclick="startTimer()" id="startBtn"
-                style="padding: 0.5rem 1.2rem; background: #2563EB; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;">Start</button>
-            <button onclick="pauseTimer()"
-                style="padding: 0.5rem 1.2rem; background: var(--bg-dark); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer;">Pause</button>
-            <button onclick="resetTimer()"
-                style="padding: 0.5rem 1.2rem; background: var(--bg-dark); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer;">Reset</button>
-            <button onclick="startBreak(5)"
-                style="padding: 0.5rem 1.2rem; background: #059669; color: white; border: none; border-radius: 6px; cursor: pointer;">Short
-                Break (5m)</button>
-            <button onclick="startBreak(15)"
-                style="padding: 0.5rem 1.2rem; background: #0D9488; color: white; border: none; border-radius: 6px; cursor: pointer;">Long
-                Break (15m)</button>
+        <!-- Centered FocusHub Logo -->
+        <div style="display: flex; justify-content: center; align-items: center; gap: 8px;">
+            <h1
+                style="display: flex; align-items: center; gap: 8px; font-size: 1.7rem; color: var(--text-main); margin: 0;">
+                <span>🎯</span> FocusHub
+            </h1>
+        </div>
+
+        <!-- Systematic Navigation Bar -->
+        <div class="nav-tabs"
+            style="display: flex; justify-content: center; align-items: center; gap: 6px; background: var(--bg-card); padding: 6px; border-radius: 12px; border: 1px solid var(--border-color);">
+            <button class="tab-btn" id="tabHistory" onclick="showHistoryTab()"
+                style="flex: 1; text-align: center; padding: 7px 10px; border-radius: 8px; border: none; background: transparent; color: var(--text-main); cursor: pointer; font-size: 0.85rem;">History
+                (<span id="historyCount">0</span>)</button>
+            <button class="tab-btn active" id="tabSearch" onclick="showSearchTab()"
+                style="flex: 1; text-align: center; padding: 7px 10px; border-radius: 8px; border: none; background: var(--accent-primary, #007bff); color: white; cursor: pointer; font-size: 0.85rem; font-weight: 600;">Search
+                Feed</button>
+            <button class="tab-btn" id="tabSaved" onclick="showSavedTab()"
+                style="flex: 1; text-align: center; padding: 7px 10px; border-radius: 8px; border: none; background: transparent; color: var(--text-main); cursor: pointer; font-size: 0.85rem;">Saved
+                (<span id="savedCount">0</span>)</button>
+            <button class="tab-btn" id="tabNotes" onclick="showNotesTab()"
+                style="flex: 1; text-align: center; padding: 7px 10px; border-radius: 8px; border: none; background: transparent; color: var(--text-main); cursor: pointer; font-size: 0.85rem;">Notes
+                (<span id="notesCount">0</span>)</button>
+        </div>
+
+    </div>
+
+    <!-- Search Controls -->
+    <div class="search-box" id="searchBoxSection">
+        <div class="input-group">
+            <input type="text" id="searchInput" class="search-input"
+                placeholder="What do you want to learn today? (e.g. Design, Python, Calculus)" />
+            <button class="search-btn" onclick="executeSearch()">Search</button>
+        </div>
+
+        <div class="controls-row">
+            <!-- Preset Pills -->
+            <div class="preset-pills">
+                <span class="pill" onclick="quickSearch('Design')">🎨 Design</span>
+                <span class="pill" onclick="quickSearch('Gaming')">🎮 Gaming</span>
+                <span class="pill" onclick="quickSearch('Coding')">💻 Coding</span>
+                <span class="pill" onclick="quickSearch('Science')">🔬 Science</span>
+            </div>
+
+            <!-- Duration Filter -->
+            <div class="filter-group">
+                <label for="durationFilter">⏱️ Duration:</label>
+                <select id="durationFilter" class="duration-select" onchange="executeSearch()">
+                    <option value="any">Any Length</option>
+                    <option value="short">Short (&lt; 4 mins)</option>
+                    <option value="medium">Medium (4 - 20 mins)</option>
+                    <option value="long">Long (&gt; 20 mins)</option>
+                </select>
+            </div>
         </div>
     </div>
 
-    <div class="container">
-        <!-- Header -->
-        <header>
-            <div class="brand">
-                <span style="font-size: 1.8rem;">🎯</span>
-                <h1>FocusHub</h1>
-            </div>
-            <div class="nav-tabs">
-                <button class="tab-btn" id="tabHistory" onclick="showHistoryTab()">History (<span
-                        id="historyCount">0</span>)</button>
-                <button class="tab-btn" id="tabSearch" onclick="showSearchTab()">Search Feed</button>
-                <button class="tab-btn" id="tabSaved" onclick="showSavedTab()">Saved (<span
-                        id="savedCount">0</span>)</button>
-                <button class="tab-btn" id="tabNotes" onclick="showNotesTab()">Notes (<span
-                        id="notesCount">0</span>)</button>
-            </div>
-        </header>
+    <!-- Video Grid -->
+    <div class="video-grid" id="videoGrid"></div>
 
-        <!-- Search Controls -->
-        <div class="search-box" id="searchBoxSection">
-            <div class="input-group">
-                <input type="text" id="searchInput" class="search-input"
-                    placeholder="What do you want to learn today? (e.g. Design, Python, Calculus)" />
-                <button class="search-btn" onclick="executeSearch()">Search</button>
-            </div>
-
-            <div class="controls-row">
-                <!-- Preset Pills -->
-                <div class="preset-pills">
-                    <span class="pill" onclick="quickSearch('Design')">🎨 Design</span>
-                    <span class="pill" onclick="quickSearch('Gaming')">🎮 Gaming</span>
-                    <span class="pill" onclick="quickSearch('Coding')">💻 Coding</span>
-                    <span class="pill" onclick="quickSearch('Science')">🔬 Science</span>
-                </div>
-
-                <!-- Duration Filter -->
-                <div class="filter-group">
-                    <label for="durationFilter">⏱️ Duration:</label>
-                    <select id="durationFilter" class="duration-select" onchange="executeSearch()">
-                        <option value="any">Any Length</option>
-                        <option value="short">Short (&lt; 4 mins)</option>
-                        <option value="medium">Medium (4 - 20 mins)</option>
-                        <option value="long">Long (&gt; 20 mins)</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-
-        <!-- Video Grid -->
-        <div class="video-grid" id="videoGrid"></div>
-
-        <!-- Smart Related Topic Pills -->
-        <div class="next-topics" id="nextTopicsSection">
-            <h3>🚀 Where to Next? Suggested Follow-up Topics:</h3>
-            <div class="topic-pills" id="topicPills"></div>
-        </div>
+    <!-- Smart Related Topic Pills -->
+    <div class="next-topics" id="nextTopicsSection">
+        <h3>🚀 Where to Next? Suggested Follow-up Topics:</h3>
+        <div class="topic-pills" id="topicPills"></div>
+    </div>
     </div>
 
     <!-- In-Page Video Player Modal -->
