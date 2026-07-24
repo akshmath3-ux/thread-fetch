@@ -500,30 +500,36 @@
     <!-- Search Box Section -->
     <!-- Search Box Section -->
     <div id="searchBoxSection" style="max-width: 800px; margin: 20px auto; padding: 0 15px;">
-        <div
-            style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 15px;">
-            <div style="display: flex; gap: 10px;">
-                <input type="text" id="searchInput"
-                    placeholder="What do you want to learn today? (e.g. Design, Python, Calculus)"
-                    style="flex: 1; background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-main); padding: 12px 16px; border-radius: 8px; font-size: 0.95rem; outline: none;" />
-                <button onclick="executeSearch()"
-                    style="background: var(--accent-primary, #007bff); border: none; color: white; padding: 0 24px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.95rem;">Search</button>
-            </div>
-            <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;" id="presetPills">
-                <button onclick="handlePresetClick('Design')"
-                    style="background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-main); padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; cursor: pointer;">🎨
-                    Design</button>
-                <button onclick="handlePresetClick('Gaming')"
-                    style="background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-main); padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; cursor: pointer;">🎮
-                    Gaming</button>
-                <button onclick="handlePresetClick('Coding')"
-                    style="background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-main); padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; cursor: pointer;">💻
-                    Coding</button>
-                <button onclick="handlePresetClick('Science')"
-                    style="background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-main); padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; cursor: pointer;">🔬
-                    Science</button>
-            </div>
+        <div <div style="display: flex; gap: 10px;">
+            <input type="text" id="searchInput"
+                placeholder="What do you want to learn today? (e.g. Design, Python, Calculus!)"
+                style="flex: 1; background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-main); padding: 12px 16px; border-radius: 8px;" />
+
+            <select id="durationFilter"
+                style="background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-main); padding: 12px 16px; border-radius: 8px; cursor: pointer;">
+                <option value="any">Any Duration</option>
+                <option value="short">Short (&lt; 4 mins)</option>
+                <option value="medium">Medium (4 - 20 mins)</option>
+                <option value="long">Long (&gt; 20 mins)</option>
+            </select>
+
+            <button onclick="executeSearch()"
+                style="background: var(--accent-primary, #007bff); border: none; color: #fff; padding: 0 24px; border-radius: 8px; font-weight: 600; cursor: pointer;">Search</button>
         </div>
+        <button onclick="handlePresetClick('Design')"
+            style="background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-main); padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; cursor: pointer;">🎨
+            Design</button>
+        <button onclick="handlePresetClick('Gaming')"
+            style="background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-main); padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; cursor: pointer;">🎮
+            Gaming</button>
+        <button onclick="handlePresetClick('Coding')"
+            style="background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-main); padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; cursor: pointer;">💻
+            Coding</button>
+        <button onclick="handlePresetClick('Science')"
+            style="background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-main); padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; cursor: pointer;">🔬
+            Science</button>
+    </div>
+    </div>
     </div>
 
     <!-- Original Video Grid Container Expected by JavaScript -->
