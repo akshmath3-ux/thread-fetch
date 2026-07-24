@@ -601,6 +601,34 @@
     </div>
     <script>
         let currentSearchResults = [];
+        function openVideoModal(video) {
+            const modal = document.getElementById('playerModal');
+            const iframe = document.getElementById('modalIframe') || document.getElementById('videoPlayer');
+
+            if (iframe && video.id) {
+                iframe.src = `https://www.youtube.com/embed/${video.id}?autoplay=1`;
+            }
+
+            if (modal) {
+                modal.style.display = 'flex';
+            }
+
+            // Also load video details/notes if your app uses them
+            if (typeof loadVideoNotes === 'function') {
+                loadVideoNotes(video);
+            }
+        }
+
+        function saveVideo(video) {
+            let saved = JSON.parse(localStorage.getItem('savedVideos') || '[]');
+            if (!saved.some(v => v.id === video.id)) {
+                saved.push(video);
+                localStorage.setItem('savedVideos', JSON.stringify(saved));
+                alert('Video saved successfully!');
+            } else {
+                alert('Video is already saved.');
+            }
+        }
 
         async function executeSearch() {
             const searchInput = document.getElementById('searchInput');
