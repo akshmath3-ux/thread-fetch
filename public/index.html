@@ -390,6 +390,58 @@
             justify-content: center;
             align-items: center;
         }
+
+        /* --- Mobile Responsive Styles --- */
+        @media (max-width: 768px) {
+
+            /* Stack the video player and notes vertically on mobile */
+            #playerModal>div>div[style*="display: flex"] {
+                flex-direction: column !important;
+                overflow-y: auto;
+            }
+
+            /* Adjust video frame for mobile screens */
+            #playerModal iframe {
+                min-height: 250px !important;
+                height: 30vh !important;
+            }
+
+            /* Make the notes panel take the remaining space */
+            #liveNoteInput {
+                min-height: 40vh !important;
+            }
+
+            /* Adjust navigation tabs to fit small screens */
+            .nav-tabs {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 0.5rem;
+            }
+
+            .tab-btn {
+                font-size: 0.85rem;
+                padding: 0.5rem 0.8rem;
+                flex: 1 1 auto;
+                text-align: center;
+            }
+
+            /* Adjust main container padding */
+            .container {
+                padding: 10px !important;
+            }
+
+            /* Adjust the search box layout for mobile */
+            #searchBoxSection>div {
+                flex-direction: column !important;
+                align-items: stretch !important;
+            }
+
+            #searchBoxSection button,
+            #searchBoxSection input {
+                width: 100%;
+                margin-top: 5px;
+            }
+        }
     </style>
 </head>
 
