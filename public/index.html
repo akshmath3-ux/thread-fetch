@@ -497,31 +497,30 @@
     </div>
 
     <!-- Search Controls -->
-    <div class="search-box" id="searchBoxSection">
-        <div class="input-group">
-            <input type="text" id="searchInput" class="search-input"
-                placeholder="What do you want to learn today? (e.g. Design, Python, Calculus)" />
-            <button class="search-btn" onclick="executeSearch()">Search</button>
-        </div>
-
-        <div class="controls-row">
-            <!-- Preset Pills -->
-            <div class="preset-pills">
-                <span class="pill" onclick="quickSearch('Design')">🎨 Design</span>
-                <span class="pill" onclick="quickSearch('Gaming')">🎮 Gaming</span>
-                <span class="pill" onclick="quickSearch('Coding')">💻 Coding</span>
-                <span class="pill" onclick="quickSearch('Science')">🔬 Science</span>
+    <!-- Search Box Section -->
+    <div id="searchBoxSection" style="max-width: 800px; margin: 20px auto; padding: 0 15px;">
+        <div
+            style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 15px;">
+            <div style="display: flex; gap: 10px;">
+                <input type="text" id="searchInput"
+                    placeholder="What do you want to learn today? (e.g. Design, Python, Calculus)"
+                    style="flex: 1; background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-main); padding: 12px 16px; border-radius: 8px; font-size: 0.95rem; outline: none;" />
+                <button onclick="executeSearch()"
+                    style="background: var(--accent-primary, #007bff); border: none; color: white; padding: 0 24px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.95rem;">Search</button>
             </div>
-
-            <!-- Duration Filter -->
-            <div class="filter-group">
-                <label for="durationFilter">⏱️ Duration:</label>
-                <select id="durationFilter" class="duration-select" onchange="executeSearch()">
-                    <option value="any">Any Length</option>
-                    <option value="short">Short (&lt; 4 mins)</option>
-                    <option value="medium">Medium (4 - 20 mins)</option>
-                    <option value="long">Long (&gt; 20 mins)</option>
-                </select>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;" id="presetPills">
+                <button onclick="handlePresetClick('Design')"
+                    style="background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-main); padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; cursor: pointer;">🎨
+                    Design</button>
+                <button onclick="handlePresetClick('Gaming')"
+                    style="background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-main); padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; cursor: pointer;">🎮
+                    Gaming</button>
+                <button onclick="handlePresetClick('Coding')"
+                    style="background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-main); padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; cursor: pointer;">💻
+                    Coding</button>
+                <button onclick="handlePresetClick('Science')"
+                    style="background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-main); padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; cursor: pointer;">🔬
+                    Science</button>
             </div>
         </div>
     </div>
@@ -591,6 +590,17 @@
         </div>
     </div>
     <script>
+        function handlePresetClick(topic) {
+            const input = document.getElementById('searchInput');
+            if (input) {
+                input.value = topic;
+            }
+            if (typeof executeSearch === 'function') {
+                executeSearch();
+            } else if (typeof searchPreset === 'function') {
+                searchPreset(topic);
+            }
+        }
         // --- Global State ---
         let currentTab = 'search';
         let timerInterval = null;
