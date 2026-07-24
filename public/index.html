@@ -686,38 +686,70 @@
         }
 
         // 4. FIXED VIDEO MODAL & SAVE (Looks up the video object safely in JS, not HTML)
+        // --- FIXED VIDEO MODAL & SAVED/HISTORY LOOKUP ---
         function openVideoModal(videoId) {
-            // Find the video data safely
-            const allKnownVideos = [...currentSearchResults, ...JSON.parse(localStorage.getItem('savedVideos') || '[]'), ...JSON.parse(localStorage.getItem('watchHistory') || '[]')];
-            const video = allKnownVideos.find(v => v.id === videoId);
-            if (!video) return;
+            // 1. Ensure we have a plain string ID
+            const idString = typeof videoId === 'object' ? (videoId.videoId || '') : videoId;
+            if (!idString) return;
 
             const modal = document.getElementById('playerModal');
-            const iframe = document.getElementById('modalIframe') || document.getElementById('videoPlayer');
+            const playerElement = document.getElementById('modalIframe') || document.getElementById('videoPlayer');
 
-            if (iframe) {
-                iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+            // 2. THE FIX: Inject the iframe directly if it's a div, or update src if it's an iframe
+            if (playerElement) {
+                if (playerElement.tagName.toLowerCase() === 'div') {
+                    playerElement.innerHTML = `<iframe width="100%" height="100%" style="border: none; border-radius: 8px;" src="https://www.youtube.com/embed/${idString}?autoplay=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+                } else {
+                    playerElement.src = `https://www.youtube.com/embed/${idString}?autoplay=1`;
+                }
             }
+
             if (modal) {
                 modal.style.display = 'flex';
             }
 
             // Handle Watch History
-            let history = JSON.parse(localStorage.getItem('watchHistory') || '[]');
-            if (!history.some(v => v.id === videoId)) {
-                history.unshift(video);
-                localStorage.setItem('watchHistory', JSON.stringify(history));
+            const allKnownVideos = [...currentSearchResults, ...JSON.parse(localStorage.getItem('savedVideos') || '[]'), ...JSON.parse(localStorage.getItem('watchHistory') || '[]')];
+            const video = allKnownVideos.find(v => {
+                const vId = typeof v.id === 'object' ? v.id.videoId : v.id;
+                return vId === idString;
+            });
+
+            if (video) {
+                let history = JSON.parse(localStorage.getItem('watchHistory') || '[]');
+                if (!history.some(v => (typeof v.id === 'object' ? v.id.videoId : v.id) === idString)) {
+                    history.unshift(video);
+                    localStorage.setItem('watchHistory', JSON.stringify(history));
+                }
             }
 
             // Handle Notes
             const notesArea = document.getElementById('videoNotesInput') || document.querySelector('textarea');
             if (notesArea) {
                 const notesMap = JSON.parse(localStorage.getItem('videoNotes') || '{}');
-                notesArea.value = notesMap[videoId] || '';
+                notesArea.value = notesMap[idString] || '';
                 notesArea.oninput = () => {
-                    notesMap[videoId] = notesArea.value;
+                    notesMap[idString] = notesArea.value;
                     localStorage.setItem('videoNotes', JSON.stringify(notesMap));
                 };
+            }
+        }
+
+        function closeVideoModal() {
+            const modal = document.getElementById('playerModal');
+            const playerElement = document.getElementById('modalIframe') || document.getElementById('videoPlayer');
+
+            // Kills the video playback immediately when closing
+            if (playerElement) {
+                if (playerElement.tagName.toLowerCase() === 'div') {
+                    playerElement.innerHTML = '';
+                } else {
+                    playerElement.src = '';
+                }
+            }
+
+            if (modal) {
+                modal.style.display = 'none';
             }
         }
 
