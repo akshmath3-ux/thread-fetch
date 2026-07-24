@@ -590,170 +590,171 @@
             <!-- Rendered dynamically -->
         </div>
     </div>
+    <script>
+        // --- Global State ---
+        let currentTab = 'search';
+        let timerInterval = null;
+        let timeLeft = 25 * 60;
+        let isRunning = false;
 
-    // --- Global State ---
-    let currentTab = 'search';
-    let timerInterval = null;
-    let timeLeft = 25 * 60;
-    let isRunning = false;
+        // --- Timer Logic ---
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            const displayStr = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 
-    // --- Timer Logic ---
-    function updateTimerDisplay() {
-    const minutes = Math.floor(timeLeft / 60);
-    const seconds = timeLeft % 60;
-    const displayStr = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            const timerEl = document.getElementById('minimizedTimerDisplay');
+            if (timerEl) timerEl.innerText = displayStr;
+        }
 
-    const timerEl = document.getElementById('minimizedTimerDisplay');
-    if (timerEl) timerEl.innerText = displayStr;
-    }
+        function setTimer(mins) {
+            clearInterval(timerInterval);
+            isRunning = false;
+            timeLeft = mins * 60;
+            updateTimerDisplay();
+            const startBtn = document.getElementById('startPauseBtn');
+            if (startBtn) startBtn.innerText = 'Start';
+        }
 
-    function setTimer(mins) {
-    clearInterval(timerInterval);
-    isRunning = false;
-    timeLeft = mins * 60;
-    updateTimerDisplay();
-    const startBtn = document.getElementById('startPauseBtn');
-    if (startBtn) startBtn.innerText = 'Start';
-    }
+        function toggleTimer() {
+            const startBtn = document.getElementById('startPauseBtn');
+            if (isRunning) {
+                clearInterval(timerInterval);
+                isRunning = false;
+                if (startBtn) startBtn.innerText = 'Start';
+            } else {
+                isRunning = true;
+                if (startBtn) startBtn.innerText = 'Pause';
+                timerInterval = setInterval(() => {
+                    if (timeLeft > 0) {
+                        timeLeft--;
+                        updateTimerDisplay();
+                    } else {
+                        clearInterval(timerInterval);
+                        isRunning = false;
+                        if (startBtn) startBtn.innerText = 'Start';
+                        alert('Focus session completed! Take a break.');
+                    }
+                }, 1000);
+            }
+        }
 
-    function toggleTimer() {
-    const startBtn = document.getElementById('startPauseBtn');
-    if (isRunning) {
-    clearInterval(timerInterval);
-    isRunning = false;
-    if (startBtn) startBtn.innerText = 'Start';
-    } else {
-    isRunning = true;
-    if (startBtn) startBtn.innerText = 'Pause';
-    timerInterval = setInterval(() => {
-    if (timeLeft > 0) {
-    timeLeft--;
-    updateTimerDisplay();
-    } else {
-    clearInterval(timerInterval);
-    isRunning = false;
-    if (startBtn) startBtn.innerText = 'Start';
-    alert('Focus session completed! Take a break.');
-    }
-    }, 1000);
-    }
-    }
+        function resetTimer() {
+            clearInterval(timerInterval);
+            isRunning = false;
+            timeLeft = 25 * 60;
+            updateTimerDisplay();
+            const startBtn = document.getElementById('startPauseBtn');
+            if (startBtn) startBtn.innerText = 'Start';
+        }
 
-    function resetTimer() {
-    clearInterval(timerInterval);
-    isRunning = false;
-    timeLeft = 25 * 60;
-    updateTimerDisplay();
-    const startBtn = document.getElementById('startPauseBtn');
-    if (startBtn) startBtn.innerText = 'Start';
-    }
+        // --- Counts Updater ---
+        function updateCounts() {
+            const historyCountEl = document.getElementById('historyCount');
+            const savedCountEl = document.getElementById('savedCount');
+            const notesCountEl = document.getElementById('notesCount');
 
-    // --- Counts Updater ---
-    function updateCounts() {
-    const historyCountEl = document.getElementById('historyCount');
-    const savedCountEl = document.getElementById('savedCount');
-    const notesCountEl = document.getElementById('notesCount');
+            if (historyCountEl && typeof watchedVideos !== 'undefined') {
+                historyCountEl.innerText = watchedVideos.length;
+            }
+            if (savedCountEl && typeof savedVideos !== 'undefined') {
+                savedCountEl.innerText = savedVideos.length;
+            }
+            if (notesCountEl && typeof activeNotes !== 'undefined') {
+                notesCountEl.innerText = activeNotes.length;
+            }
+        }
 
-    if (historyCountEl && typeof watchedVideos !== 'undefined') {
-    historyCountEl.innerText = watchedVideos.length;
-    }
-    if (savedCountEl && typeof savedVideos !== 'undefined') {
-    savedCountEl.innerText = savedVideos.length;
-    }
-    if (notesCountEl && typeof activeNotes !== 'undefined') {
-    notesCountEl.innerText = activeNotes.length;
-    }
-    }
+        // --- Tab Switching Logic ---
+        function hideAllSections() {
+            const searchBox = document.getElementById('searchBoxSection');
+            const feedSec = document.getElementById('feedSection') || document.getElementById('searchResults');
+            const historySec = document.getElementById('historySection');
+            const savedSec = document.getElementById('savedSection');
+            const notesSec = document.getElementById('notesSection');
 
-    // --- Tab Switching Logic ---
-    function hideAllSections() {
-    const searchBox = document.getElementById('searchBoxSection');
-    const feedSec = document.getElementById('feedSection') || document.getElementById('searchResults');
-    const historySec = document.getElementById('historySection');
-    const savedSec = document.getElementById('savedSection');
-    const notesSec = document.getElementById('notesSection');
+            if (searchBox) searchBox.style.display = 'none';
+            if (feedSec) feedSec.style.display = 'none';
+            if (historySec) historySec.style.display = 'none';
+            if (savedSec) savedSec.style.display = 'none';
+            if (notesSec) notesSec.style.display = 'none';
 
-    if (searchBox) searchBox.style.display = 'none';
-    if (feedSec) feedSec.style.display = 'none';
-    if (historySec) historySec.style.display = 'none';
-    if (savedSec) savedSec.style.display = 'none';
-    if (notesSec) notesSec.style.display = 'none';
+            ['tabHistory', 'tabSearch', 'tabSaved', 'tabNotes'].forEach(id => {
+                const btn = document.getElementById(id);
+                if (btn) {
+                    btn.classList.remove('active');
+                    btn.style.background = 'transparent';
+                    btn.style.color = 'var(--text-main)';
+                    btn.style.fontWeight = 'normal';
+                }
+            });
+        }
 
-    ['tabHistory', 'tabSearch', 'tabSaved', 'tabNotes'].forEach(id => {
-    const btn = document.getElementById(id);
-    if (btn) {
-    btn.classList.remove('active');
-    btn.style.background = 'transparent';
-    btn.style.color = 'var(--text-main)';
-    btn.style.fontWeight = 'normal';
-    }
-    });
-    }
+        function setActiveButton(btnId) {
+            const btn = document.getElementById(btnId);
+            if (btn) {
+                btn.classList.add('active');
+                btn.style.background = 'var(--accent-primary, #007bff)';
+                btn.style.color = 'white';
+                btn.style.fontWeight = '600';
+            }
+        }
 
-    function setActiveButton(btnId) {
-    const btn = document.getElementById(btnId);
-    if (btn) {
-    btn.classList.add('active');
-    btn.style.background = 'var(--accent-primary, #007bff)';
-    btn.style.color = 'white';
-    btn.style.fontWeight = '600';
-    }
-    }
+        function showSearchTab() {
+            hideAllSections();
+            setActiveButton('tabSearch');
+            currentTab = 'search';
 
-    function showSearchTab() {
-    hideAllSections();
-    setActiveButton('tabSearch');
-    currentTab = 'search';
+            const searchBox = document.getElementById('searchBoxSection');
+            const feedSec = document.getElementById('feedSection') || document.getElementById('searchResults');
 
-    const searchBox = document.getElementById('searchBoxSection');
-    const feedSec = document.getElementById('feedSection') || document.getElementById('searchResults');
+            if (searchBox) searchBox.style.display = 'block';
+            if (feedSec) feedSec.style.display = 'block';
+            if (typeof renderVideos === 'function' && typeof currentSearchResults !== 'undefined') {
+                renderVideos(currentSearchResults);
+            }
+            updateCounts();
+        }
 
-    if (searchBox) searchBox.style.display = 'block';
-    if (feedSec) feedSec.style.display = 'block';
-    if (typeof renderVideos === 'function' && typeof currentSearchResults !== 'undefined') {
-    renderVideos(currentSearchResults);
-    }
-    updateCounts();
-    }
+        function showHistoryTab() {
+            hideAllSections();
+            setActiveButton('tabHistory');
+            currentTab = 'history';
 
-    function showHistoryTab() {
-    hideAllSections();
-    setActiveButton('tabHistory');
-    currentTab = 'history';
+            const historySec = document.getElementById('historySection');
+            if (historySec) historySec.style.display = 'block';
+            if (typeof renderHistory === 'function') renderHistory();
+            updateCounts();
+        }
 
-    const historySec = document.getElementById('historySection');
-    if (historySec) historySec.style.display = 'block';
-    if (typeof renderHistory === 'function') renderHistory();
-    updateCounts();
-    }
+        function showSavedTab() {
+            hideAllSections();
+            setActiveButton('tabSaved');
+            currentTab = 'saved';
 
-    function showSavedTab() {
-    hideAllSections();
-    setActiveButton('tabSaved');
-    currentTab = 'saved';
+            const savedSec = document.getElementById('savedSection');
+            if (savedSec) savedSec.style.display = 'block';
+            if (typeof renderSaved === 'function') renderSaved();
+            updateCounts();
+        }
 
-    const savedSec = document.getElementById('savedSection');
-    if (savedSec) savedSec.style.display = 'block';
-    if (typeof renderSaved === 'function') renderSaved();
-    updateCounts();
-    }
+        function showNotesTab() {
+            hideAllSections();
+            setActiveButton('tabNotes');
+            currentTab = 'notes';
 
-    function showNotesTab() {
-    hideAllSections();
-    setActiveButton('tabNotes');
-    currentTab = 'notes';
+            const notesSec = document.getElementById('notesSection');
+            if (notesSec) notesSec.style.display = 'block';
+            if (typeof renderNotesArchive === 'function') renderNotesArchive();
+            updateCounts();
+        }
 
-    const notesSec = document.getElementById('notesSection');
-    if (notesSec) notesSec.style.display = 'block';
-    if (typeof renderNotesArchive === 'function') renderNotesArchive();
-    updateCounts();
-    }
-
-    // Initial count check on load
-    window.addEventListener('DOMContentLoaded', () => {
-    updateCounts();
-    updateTimerDisplay();
-    });
+        // Initial count check on load
+        window.addEventListener('DOMContentLoaded', () => {
+            updateCounts();
+            updateTimerDisplay();
+        });
+    </script>
 </body>
 
 </html>
