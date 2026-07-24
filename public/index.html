@@ -625,7 +625,6 @@
             let rawQuery = searchInput ? searchInput.value.trim() : '';
             if (!rawQuery) return;
 
-            // Appends academic terms and explicitly bans toddler/kids channels
             let fetchQuery = `${rawQuery} lecture OR tutorial -kids -children -toddler -toy -nursery -ryan -"rock n learn"`;
 
             const duration = durationFilter ? durationFilter.value : 'any';
@@ -656,7 +655,6 @@
             }
 
             videos.forEach((video) => {
-                // Extract real ID string if nested in an object (search API vs stored objects)
                 const actualId = typeof video.id === 'object' ? (video.id.videoId || '') : (video.id || '');
                 if (!actualId) return;
 
@@ -689,7 +687,6 @@
         function openVideoModal(videoId) {
             console.log("RAW VIDEO ID RECEIVED:", videoId);
 
-            // Deep-clean the ID whether it's a string, an object, or nested inside a video object
             let idString = '';
             if (typeof videoId === 'object' && videoId !== null) {
                 idString = videoId.videoId || videoId.id?.videoId || videoId.id || '';
@@ -704,7 +701,6 @@
             }
 
             const modal = document.getElementById('playerModal');
-            // FIXED: this now matches the actual iframe id in the HTML (id="youtubeIframe")
             const iframe = document.getElementById('youtubeIframe');
 
             if (iframe) {
@@ -715,7 +711,6 @@
                 modal.style.display = 'flex';
             }
 
-            // Handle Watch History
             const allKnownVideos = [
                 ...currentSearchResults,
                 ...JSON.parse(localStorage.getItem('savedVideos') || '[]'),
@@ -743,10 +738,24 @@
             const notesArea = document.getElementById('liveNoteInput');
             if (notesArea) {
                 const notesMap = JSON.parse(localStorage.getItem('videoNotes') || '{}');
-                notesArea.value = notesMap[idString] || '';
+                const existingEntry = notesMap[idString];
+                notesArea.value = (typeof existingEntry === 'object' ? existingEntry.text : existingEntry) || '';
+
                 notesArea.oninput = () => {
-                    notesMap[idString] = notesArea.value;
+                    notesMap[idString] = {
+                        text: notesArea.value,
+                        title: video?.title || 'Untitled Video',
+                        channel: video?.channelTitle || video?.channel || '',
+                        thumbnail: video?.thumbnail || '',
+                        id: idString,
+                    };
                     localStorage.setItem('videoNotes', JSON.stringify(notesMap));
+
+                    const notesCountEl = document.getElementById('notesCount');
+                    if (notesCountEl) {
+                        const count = Object.values(notesMap).filter(n => (typeof n === 'object' ? n.text : n)?.trim()).length;
+                        notesCountEl.textContent = count;
+                    }
                 };
             }
         }
@@ -754,7 +763,6 @@
         // Closes the modal and stops playback (clearing src, not just hiding, so audio doesn't keep playing)
         function closePlayerModal() {
             const modal = document.getElementById('playerModal');
-            // FIXED: this now matches the actual iframe id in the HTML (id="youtubeIframe")
             const iframe = document.getElementById('youtubeIframe');
             if (iframe) iframe.src = '';
             if (modal) modal.style.display = 'none';
@@ -823,6 +831,39 @@
             if (videoGrid) videoGrid.innerHTML = '';
             const notesSection = document.getElementById('notesSection');
             if (notesSection) notesSection.style.display = 'block';
+            renderNotesTab();
+        }
+
+        // Builds cards for each video that has a saved note, shown in the Notes tab
+        function renderNotesTab() {
+            const notesMap = JSON.parse(localStorage.getItem('videoNotes') || '{}');
+            const grid = document.getElementById('notesGrid');
+            if (!grid) return;
+
+            const entries = Object.values(notesMap).filter(n => {
+                const text = typeof n === 'object' ? n.text : n;
+                return text && text.trim();
+            });
+
+            if (entries.length === 0) {
+                grid.innerHTML = '<p style="color: var(--text-muted); text-align: center; grid-column: 1 / -1; padding: 40px;">No notes yet. Type something while watching a video to save it here.</p>';
+                return;
+            }
+
+            grid.innerHTML = '';
+            entries.forEach(entry => {
+                const card = document.createElement('div');
+                card.style.cssText = 'background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column;';
+                card.innerHTML = `
+    <img src="${entry.thumbnail || ''}" alt="" style="width: 100%; aspect-ratio: 16/9; object-fit: cover;" />
+    <div style="padding: 14px; display: flex; flex-direction: column; gap: 8px;">
+      <h4 style="font-size: 0.9rem; color: var(--text-main); margin: 0; cursor: pointer;" onclick="openVideoModal('${entry.id}')">${entry.title}</h4>
+      <span style="font-size: 0.75rem; color: var(--text-muted);">${entry.channel || ''}</span>
+      <p style="font-size: 0.85rem; color: var(--text-main); white-space: pre-wrap; background: var(--bg-dark); border-radius: 8px; padding: 8px; margin-top: 4px;">${entry.text}</p>
+    </div>
+  `;
+                grid.appendChild(card);
+            });
         }
 
         function setActiveTab(activeId) {
@@ -847,14 +888,19 @@
             // this just exists so the inline oninput="autoSaveCurrentNote()" doesn't error.
         }
 
-        // Initialize saved/history counts on page load
+        // Initialize saved/history/notes counts on page load
         document.addEventListener('DOMContentLoaded', () => {
             const saved = JSON.parse(localStorage.getItem('savedVideos') || '[]');
             const history = JSON.parse(localStorage.getItem('watchHistory') || '[]');
+            const notesMap = JSON.parse(localStorage.getItem('videoNotes') || '{}');
+            const notesCount = Object.values(notesMap).filter(n => (typeof n === 'object' ? n.text : n)?.trim()).length;
+
             const savedCountEl = document.getElementById('savedCount');
             const historyCountEl = document.getElementById('historyCount');
+            const notesCountEl = document.getElementById('notesCount');
             if (savedCountEl) savedCountEl.textContent = saved.length;
             if (historyCountEl) historyCountEl.textContent = history.length;
+            if (notesCountEl) notesCountEl.textContent = notesCount;
         });
     </script>
 </body>
