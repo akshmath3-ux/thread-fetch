@@ -600,6 +600,8 @@
         </div>
     </div>
     <script>
+        let currentSearchResults = [];
+
         async function executeSearch() {
             const searchInput = document.getElementById('searchInput');
             const query = searchInput ? searchInput.value.trim() : '';
@@ -614,27 +616,28 @@
             try {
                 const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
                 const data = await response.json();
+                currentSearchResults = data || [];
 
                 if (videoGrid) {
                     videoGrid.innerHTML = '';
-                    if (data && data.length > 0) {
-                        data.forEach(video => {
+                    if (currentSearchResults.length > 0) {
+                        currentSearchResults.forEach((video, index) => {
                             const card = document.createElement('div');
                             card.style.cssText = 'background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column;';
                             card.innerHTML = `
-            <div style="position: relative; cursor: pointer;" onclick="openVideoModal(${JSON.stringify(video).replace(/"/g, '&quot;')})">
-              <img src="${video.thumbnail || ''}" alt="${video.title || ''}" style="width: 100%; aspect-ratio: 16/9; object-fit: cover;" />
+            <div style="position: relative; cursor: pointer;" onclick="handleVideoClick(${index})">
+              <img src="${video.thumbnail || ''}" alt="${encodeURIComponent(video.title || '')}" style="width: 100%; aspect-ratio: 16/9; object-fit: cover;" />
               <div style="position: absolute; inset: 0; background: rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0'">
                 <span style="background: var(--accent-primary, #007bff); color: white; padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 0.85rem;">Watch & Take Notes</span>
               </div>
             </div>
             <div style="padding: 14px; display: flex; flex-direction: column; gap: 10px; flex: 1; justify-content: space-between;">
-              <h4 style="font-size: 0.9rem; color: var(--text-main); margin: 0; line-height: 1.4; cursor: pointer;" onclick="openVideoModal(${JSON.stringify(video).replace(/"/g, '&quot;')})">${video.title || ''}</h4>
+              <h4 style="font-size: 0.9rem; color: var(--text-main); margin: 0; line-height: 1.4; cursor: pointer;" onclick="handleVideoClick(${index})">${video.title || ''}</h4>
               <div style="display: flex; justify-content: space-between; align-items: center;">
                 <span style="font-size: 0.75rem; color: var(--text-muted);">${video.channelTitle || ''}</span>
                 <div style="display: flex; gap: 6px;">
-                  <button onclick="openVideoModal(${JSON.stringify(video).replace(/"/g, '&quot;')})" style="background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-main); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; cursor: pointer;">Watch</button>
-                  <button onclick="saveVideo(${JSON.stringify(video).replace(/"/g, '&quot;')})" style="background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-main); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; cursor: pointer;">Save</button>
+                  <button onclick="handleVideoClick(${index})" style="background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-main); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; cursor: pointer;">Watch</button>
+                  <button onclick="handleSaveClick(${index})" style="background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-main); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; cursor: pointer;">Save</button>
                 </div>
               </div>
             </div>
@@ -653,6 +656,25 @@
             }
         }
 
+        function handleVideoClick(index) {
+            const video = currentSearchResults[index];
+            if (!video) return;
+            if (typeof openVideoModal === 'function') {
+                openVideoModal(video);
+            } else {
+                console.warn('openVideoModal function not found');
+            }
+        }
+
+        function handleSaveClick(index) {
+            const video = currentSearchResults[index];
+            if (!video) return;
+            if (typeof saveVideo === 'function') {
+                saveVideo(video);
+            } else {
+                console.warn('saveVideo function not found');
+            }
+        }
         function handlePresetClick(topic) {
             const input = document.getElementById('searchInput');
             if (input) {
