@@ -591,597 +591,169 @@
         </div>
     </div>
 
-    <script>
-        function hideAllSections() {
-            const searchBox = document.getElementById('searchBoxSection');
-            const feedSec = document.getElementById('feedSection') || document.getElementById('searchResults');
-            const historySec = document.getElementById('historySection');
-            const savedSec = document.getElementById('savedSection');
-            const notesSec = document.getElementById('notesSection');
-
-            if (searchBox) searchBox.style.display = 'none';
-            if (feedSec) feedSec.style.display = 'none';
-            if (historySec) historySec.style.display = 'none';
-            if (savedSec) savedSec.style.display = 'none';
-            if (notesSec) notesSec.style.display = 'none';
-
-            document.querySelectorAll('.tab-btn').forEach(b => {
-                b.classList.remove('active');
-                b.style.background = 'transparent';
-                b.style.color = 'var(--text-main)';
-                b.style.fontWeight = 'normal';
-            });
-        }
-
-        function setActiveButton(btnId) {
-            const btn = document.getElementById(btnId);
-            if (btn) {
-                btn.classList.add('active');
-                btn.style.background = 'var(--accent-primary, #007bff)';
-                btn.style.color = 'white';
-                btn.style.fontWeight = '600';
-            }
-        }
-
-        function showSearchTab() {
-            hideAllSections();
-            setActiveButton('tabSearch');
-            const searchBox = document.getElementById('searchBoxSection');
-            const feedSec = document.getElementById('feedSection') || document.getElementById('searchResults');
-            if (searchBox) searchBox.style.display = 'block';
-            if (feedSec) feedSec.style.display = 'block';
-            if (typeof renderVideos === 'function' && typeof currentSearchResults !== 'undefined') {
-                renderVideos(currentSearchResults);
-            }
-        }
-
-        function showSavedTab() {
-            hideAllSections();
-            setActiveButton('tabSaved');
-            const savedSec = document.getElementById('savedSection');
-            if (savedSec) savedSec.style.display = 'block';
-            if (typeof renderSaved === 'function') renderSaved();
-        }
-
-        function showHistoryTab() {
-            hideAllSections();
-            setActiveButton('tabHistory');
-            const historySec = document.getElementById('historySection');
-            if (historySec) historySec.style.display = 'block';
-            if (typeof renderHistory === 'function') renderHistory();
-        }
-
-        function showNotesTab() {
-            hideAllSections();
-            setActiveButton('tabNotes');
-            const notesSec = document.getElementById('notesSection');
-            if (notesSec) notesSec.style.display = 'block';
-            if (typeof renderNotesArchive === 'function') renderNotesArchive();
-        }
-        function showNotesTab() {
-            const searchBox = document.getElementById('searchBoxSection');
-            const feedSec = document.getElementById('feedSection') || document.getElementById('searchResults');
-            const historySec = document.getElementById('historySection');
-            const savedSec = document.getElementById('savedSection');
-            const notesSec = document.getElementById('notesSection');
-
-            if (searchBox) searchBox.style.display = 'none';
-            if (feedSec) feedSec.style.display = 'none';
-            if (historySec) historySec.style.display = 'none';
-            if (savedSec) savedSec.style.display = 'none';
-            if (notesSec) notesSec.style.display = 'block';
-
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            const notesBtn = document.getElementById('tabNotes');
-            if (notesBtn) notesBtn.classList.add('active');
-
-            renderNotesArchive();
-        }
-        let activeVideoData = null;
-        let savedNotes = JSON.parse(localStorage.getItem('focus_hub_notes')) || {};
-
-        document.addEventListener('DOMContentLoaded', () => {
-            updateNotesCount();
-        });
-
-        // Update openPlayerModal to map notes to specific videos
-        function openPlayerModal(videoObj) {
-            activeVideoData = videoObj;
-            const modal = document.getElementById('playerModal');
-            const iframe = document.getElementById('youtubeIframe');
-            const titleEl = document.getElementById('modalVideoTitle');
-            const noteInput = document.getElementById('liveNoteInput');
-
-            if (titleEl) titleEl.innerText = videoObj.title;
-            if (iframe) iframe.src = `https://www.youtube-nocookie.com/embed/${videoObj.id || videoObj.videoId}?autoplay=1&rel=0`;
-
-            if (noteInput) {
-                noteInput.value = savedNotes[videoObj.id || videoObj.videoId] ? savedNotes[videoObj.id || videoObj.videoId].text : '';
-            }
-
-            if (modal) modal.style.display = 'flex';
-        }
-
-        function closePlayerModal() {
-            const modal = document.getElementById('playerModal');
-            const iframe = document.getElementById('youtubeIframe');
-            if (iframe) iframe.src = '';
-            if (modal) modal.style.display = 'none';
-            activeVideoData = null;
-        }
-
-        function autoSaveCurrentNote() {
-            if (!activeVideoData) return;
-            const vidId = activeVideoData.id || activeVideoData.videoId;
-            const textInput = document.getElementById('liveNoteInput');
-            if (!vidId || !textInput) return;
-
-            const text = textInput.value;
-
-            // Save or update the note associated with this specific video ID
-            savedNotes[vidId] = {
-                videoId: vidId,
-                title: activeVideoData.title || 'Study Session',
-                channel: activeVideoData.channelTitle || 'Educational Source',
-                thumbnail: activeVideoData.thumbnail || '',
-                text: text,
-                updatedAt: new Date().toLocaleDateString()
-            };
-
-            // Commit immediately to localStorage so refresh doesn't wipe it
-            localStorage.setItem('focus_hub_notes', JSON.stringify(savedNotes));
-            updateNotesCount();
-
-            const status = document.getElementById('noteSaveStatus');
-            if (status) {
-                status.innerText = 'Saved!';
-                setTimeout(() => { status.innerText = 'Auto-saved'; }, 1500);
-            }
-        }
-
-        function updateNotesCount() {
-            const count = Object.keys(savedNotes).filter(k => savedNotes[k].text.trim().length > 0).length;
-            const badge = document.getElementById('notesCount');
-            if (badge) badge.innerText = count;
-        }
-
-        // Ensure tab switching handles the new 'notes' section cleanly
-        function switchTab(tabName) {
-            // Hide all sections explicitly
-            const searchSec = document.getElementById('searchBoxSection');
-            const feedSec = document.getElementById('feedSection') || document.getElementById('searchResults');
-            const historySec = document.getElementById('historySection');
-            const savedSec = document.getElementById('savedSection');
-            const notesSec = document.getElementById('notesSection');
-
-            if (searchSec) searchSec.style.display = 'none';
-            if (feedSec) feedSec.style.display = 'none';
-            if (historySec) historySec.style.display = 'none';
-            if (savedSec) savedSec.style.display = 'none';
-            if (notesSec) notesSec.style.display = 'none';
-
-            // Remove active state from all tab buttons
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-
-            // Activate the correct button
-            const targetBtn = document.getElementById(`tab${tabName.charAt(0).toUpperCase() + tabName.slice(1)}`);
-            if (targetBtn) targetBtn.classList.add('active');
-
-            // Show the requested section
-            if (tabName === 'search') {
-                if (searchSec) searchSec.style.display = 'block';
-                if (feedSec) feedSec.style.display = 'block';
-            } else if (tabName === 'history') {
-                if (historySec) historySec.style.display = 'block';
-                if (typeof renderHistory === 'function') renderHistory();
-            } else if (tabName === 'saved') {
-                if (savedSec) savedSec.style.display = 'block';
-                if (typeof renderSaved === 'function') renderSaved();
-            } else if (tabName === 'notes') {
-                if (notesSec) notesSec.style.display = 'block';
-                renderNotesArchive();
-            }
-        }
-        function renderNotesArchive() {
-            const grid = document.getElementById('notesGrid');
-            if (!grid) return;
-
-            const activeNotes = Object.values(savedNotes).filter(n => n.text.trim().length > 0);
-
-            if (activeNotes.length === 0) {
-                grid.innerHTML = '<p style="color: var(--text-muted); grid-column: 1/-1;">No study notes taken yet. Open any video to start writing notes!</p>';
-                return;
-            }
-
-            grid.innerHTML = activeNotes.map(note => `
-    <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 10px; padding: 1.2rem; display: flex; flex-direction: column; gap: 0.8rem;">
-      <div style="display: flex; gap: 0.8rem; align-items: center;">
-        <img src="${note.thumbnail}" style="width: 60px; height: 40px; object-fit: cover; border-radius: 4px;" />
-        <div>
-          <h4 style="font-size: 0.9rem; color: var(--text-main); margin: 0; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden;">${note.title}</h4>
-          <span style="font-size: 0.75rem; color: var(--text-muted);">${note.channel} • Updated: ${note.updatedAt}</span>
-        </div>
-      </div>
-      <div style="background: var(--bg-dark); padding: 0.8rem; border-radius: 6px; font-size: 0.85rem; color: var(--text-main); white-space: pre-wrap; max-height: 120px; overflow-y: auto;">${note.text}</div>
-    </div>
-  `).join('');
-        }
-        function showHistoryTab() {
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById('tabHistory')?.classList.add('active');
-            currentTab = 'history';
-            renderVideos(watchedVideos);
-        }
-
-        function showSearchTab() {
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById('tabSearch')?.classList.add('active');
-            currentTab = 'search';
-            renderVideos(currentSearchResults);
-        }
-
-        function showSavedTab() {
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById('tabSaved')?.classList.add('active');
-            currentTab = 'saved';
-            renderVideos(savedVideos);
-        }
-        // --- Pomodoro Timer Logic ---
-        function handleWatch(id) {
-            // Find the video object from whichever list is currently active or search results
-            let videoObj = currentSearchResults.find(v => (v.id?.videoId || v.id) === id);
-            if (!videoObj && typeof savedVideos !== 'undefined') {
-                videoObj = savedVideos.find(v => (v.id?.videoId || v.id) === id);
-            }
-            if (!videoObj && typeof watchedVideos !== 'undefined') {
-                videoObj = watchedVideos.find(v => (v.id?.videoId || v.id) === id);
-            }
-
-            if (videoObj) {
-                // Normalize properties so the modal and notes panel pick them up correctly
-                const cleanId = videoObj.id?.videoId || videoObj.id || videoObj.videoId;
-                const normalizedObj = {
-                    id: cleanId,
-                    videoId: cleanId,
-                    title: videoObj.title || videoObj.snippet?.title,
-                    channelTitle: videoObj.channelTitle || videoObj.snippet?.channelTitle || 'Educational Source',
-                    thumbnail: videoObj.thumbnail || videoObj.thumbnails?.high?.url || videoObj.snippet?.thumbnails?.medium?.url
-                };
-
-                // Open the modal using our integrated notes-ready function
-                openPlayerModal(normalizedObj);
-            } else {
-                // Fallback if object isn't found in arrays
-                openPlayerModal({ id: id, videoId: id, title: 'Study Session', channelTitle: 'Educational Source', thumbnail: '' });
-            }
-
-            // Track in watched history if your app handles it
-            if (typeof addToHistory === 'function') {
-                addToHistory(id);
-            }
-        }
-        let totalSeconds = 25 * 60;
-        let remainingSeconds = totalSeconds;
-        let timerInterval = null;
-        let isRunning = false;
-        let currentMode = 'Focus Session';
-        function updateDisplay() {
-            const displayEl = document.getElementById('timer-display') || document.getElementById('timerDisplay');
-            if (!displayEl) return;
-
-            const minutes = Math.floor(remainingSeconds / 60);
-            const seconds = remainingSeconds % 60;
-            displayEl.innerText = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-        }
-
-        function setTimerDuration(minutes) {
-            pauseTimer();
-            currentMode = 'Focus Session';
-            const label = document.getElementById('timerLabel');
-            if (label) label.innerText = currentMode;
-            totalSeconds = minutes * 60;
-            remainingSeconds = totalSeconds;
-            updateDisplay();
-        }
-
-        function startBreak(minutes) {
-            pauseTimer();
-            currentMode = minutes === 5 ? 'Short Break' : 'Long Break';
-            const label = document.getElementById('timerLabel');
-            if (label) label.innerText = currentMode;
-            totalSeconds = minutes * 60;
-            remainingSeconds = totalSeconds;
-            updateDisplay();
-            startTimer();
-        }
-
-        function startTimer() {
-            if (isRunning) return;
-            isRunning = true;
-            timerInterval = setInterval(() => {
-                if (remainingSeconds > 0) {
-                    remainingSeconds--;
-                    updateDisplay();
-                } else {
-                    pauseTimer();
-                    alert(`${currentMode} finished! Time for a change.`);
-                }
-            }, 1000);
-        }
-
-        function pauseTimer() {
-            isRunning = false;
-            clearInterval(timerInterval);
-        }
-
-        function resetTimer() {
-            pauseTimer();
-            remainingSeconds = totalSeconds;
-            updateDisplay();
-        }
-        let currentTab = 'search';
-        let currentQuery = '';
-        let currentSearchResults = [];
-        let savedVideos = [];
-        let watchedVideos = [];
-        try {
-            watchedVideos = JSON.parse(localStorage.getItem('focushub_watched')) || [];
-        } catch (e) {
-            watchedVideos = [];
-        }
-        function updateCounts() {
-            const historyBtn = document.querySelector('button[onclick*="history"]');
-            if (historyBtn) historyBtn.innerText = `History (${watchedVideos.length})`;
-
-            const savedBtn = document.querySelector('button[onclick*="saved"]');
-            if (savedBtn) savedBtn.innerText = `Saved (${savedVideos.length})`;
-        }
-        function addToWatchHistory(videoObj) {
-            const incomingId = videoObj.id?.videoId || videoObj.id;
-
-            // Remove if it's already in history using the clean ID comparison
-            watchedVideos = watchedVideos.filter(v => {
-                const existingId = v.id?.videoId || v.id;
-                return existingId !== incomingId;
-            });
-
-            // Add to the front
-            watchedVideos.unshift(videoObj);
-
-            // Keep only the last 20 watched videos
-            if (watchedVideos.length > 20) {
-                watchedVideos.pop();
-            }
-
-            localStorage.setItem('focushub_watched', JSON.stringify(watchedVideos));
-            updateCounts();
-        }
-        savedVideos = JSON.parse(localStorage.getItem('focushub_saved') || '[]');
-        try { } catch (e) {
-            savedVideos = [];
-        }
-
-        const TOPIC_RELATIONS = {
-            'design': ['Figma Basics', 'UI/UX Principles', 'Wireframing', 'Color Theory'],
-            'coding': ['Data Structures', 'Python Project', 'Web Dev Basics', 'Git & GitHub'],
-            'gaming': ['Game Engine Basics', 'Unity Tutorial', 'Unreal Engine', '3D Modeling'],
-            'science': ['Astrophysics', 'Quantum Mechanics', 'Biology Essentials', 'Neuroscience']
-        };
-
-        updateSavedCount();
-
-        async function executeSearch() {
-            const rawQuery = document.getElementById('searchInput').value.trim();
-            if (!rawQuery) return;
-
-            let enhancedQuery = rawQuery;
-            const lower = rawQuery.toLowerCase();
-            const words = rawQuery.split(' ');
-
-            // Prevent confusion like "cycle" matching software life cycles
-            if (lower === 'cycle' || lower === 'biking') {
-                enhancedQuery = 'bicycling workout health benefits exercise cycling';
-            } else if (words.length <= 2) {
-                // General smart educational enhancement for short queries
-                enhancedQuery = `${rawQuery} educational tutorial guide course`;
-            }
-
-            const duration = document.getElementById('durationFilter').value;
-            currentQuery = rawQuery.toLowerCase();
-            const grid = document.getElementById('videoGrid');
-            grid.innerHTML = '<p style="color: var(--text-muted); grid-column: 1/-1; text-align: center;">Searching educational videos...</p>';
-
-            try {
-                const res = await fetch(`/api/search?q=${encodeURIComponent(enhancedQuery)}&duration=${duration}`);
-                const data = await res.json();
-
-                let results = Array.isArray(data) ? data : (data.results || []);
-
-                // Slice to show up to 8 videos instead of default amount
-                currentSearchResults = results.slice(0, 8);
-
-                if (!currentSearchResults || currentSearchResults.length === 0) {
-                    grid.innerHTML = '<p style="color: var(--text-muted); grid-column: 1/-1; text-align: center;">No educational videos found.</p>';
-                    document.getElementById('nextTopicsSection').style.display = 'none';
-                    return;
-                }
-
-                renderVideos(currentSearchResults);
-                renderRelatedTopics(currentQuery);
-            } catch (err) {
-                grid.innerHTML = '<p style="color: #EF4444; grid-column: 1/-1; text-align: center;">Error loading videos.</p>';
-            }
-        }
-        function quickSearch(term) {
-            document.getElementById('searchInput').value = term;
-            executeSearch();
-        }
-
-        function renderVideos(videos) {
-            const grid = document.getElementById('videoGrid');
-            grid.innerHTML = '';
-
-            videos.forEach(v => {
-                const id = v.id?.videoId || v.id;
-                const snippet = v.snippet || {};
-                const title = v.title || snippet.title || 'Untitled Video';
-                const channel = v.channel || snippet.channelTitle || 'Unknown Channel';
-                const thumb = v.thumbnail || snippet.thumbnails?.high?.url || snippet.thumbnails?.medium?.url || '';
-                const desc = snippet.description || v.description || 'No detailed description available.';
-
-                const isSaved = savedVideos.some(sv => sv.id === id);
-
-                const videoDataObj = { id, title, channel, thumbnail: thumb, description: desc };
-
-                const card = document.createElement('div');
-                card.className = 'video-card';
-                card.innerHTML = `
-          <div class="thumb-container">
-            <img src="${thumb}" alt="Thumbnail" />
-            <button class="bookmark-btn ${isSaved ? 'saved' : ''}" id="btn-${id}">
-              ${isSaved ? '❤️ Saved' : '🔖 Save'}
-            </button>
-          </div>
-          <div class="video-info">
-            <div class="video-title"></div>
-            <div class="channel-name"></div>
-            
-           <div class="card-actions">
-  <button class="action-btn" onclick="handleWatch('${id}')">Watch</button>
-  <button class="action-btn" onclick="toggleSummary('${id}')">Summary</button>
-</div>
-
-            <div class="summary-box" id="summary-${id}">
-              <strong>📌 Full Summary / Description:</strong>
-              <p style="margin-top: 0.4rem; white-space: pre-line;"></p>
-            </div>
-          </div>
-        `;
-
-                // Safely insert text content to avoid syntax crashes on quotes
-                card.querySelector('.video-title').textContent = title;
-                card.querySelector('.channel-name').textContent = channel;
-                card.querySelector(`#summary-${id} p`).textContent = desc;
-
-                // Attach click handler safely via event listener
-                const saveBtn = card.querySelector(`#btn-${id}`);
-                saveBtn.addEventListener('click', () => toggleSave(videoDataObj));
-
-                grid.appendChild(card);
-            });
-        }
-
-        function openPlayerWithHistory(videoObj) {
-            // 1. Record to history array and update storage
-            addToWatchHistory(videoObj);
-
-            // 2. Open the player modal
-            const modal = document.getElementById('playerModal');
-            const iframe = document.getElementById('youtubeIframe');
-            iframe.src = `https://www.youtube-nocookie.com/embed/${videoObj.id}?autoplay=1&rel=0`;
-            modal.style.display = 'flex';
-        }
-
-        function closePlayer() {
-            const modal = document.getElementById('playerModal');
-            const iframe = document.getElementById('youtubeIframe');
-            iframe.src = '';
-            modal.style.display = 'none';
-        }
-        function switchTab(tabName) {
-            currentTab = tabName;
-
-            // Update active button styles
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            if (tabName === 'history') {
-                document.getElementById('tabHistory')?.classList.add('active');
-                renderVideos(watchedVideos);
-            } else if (tabName === 'saved') {
-                document.getElementById('tabSaved')?.classList.add('active');
-                renderVideos(savedVideos);
-            } else {
-                document.getElementById('tabSearch')?.classList.add('active');
-                renderVideos(currentSearchResults);
-            }
-        }
-        function toggleSave(videoObj) {
-            const index = savedVideos.findIndex(sv => sv.id === videoObj.id);
-
-            if (index > -1) {
-                savedVideos.splice(index, 1);
-            } else {
-                savedVideos.push(videoObj);
-            }
-
-            localStorage.setItem('focushub_saved', JSON.stringify(savedVideos));
-            updateSavedCount();
-
-            if (currentTab === 'saved') {
-                renderSavedTab();
-            } else {
-                renderVideos(currentSearchResults);
-            }
-        }
-
-        function updateSavedCount() {
-            document.getElementById('savedCount').innerText = savedVideos.length;
-        }
-
-        function switchTab(tab) {
-            currentTab = tab;
-            document.getElementById('tabSearch').classList.toggle('active', tab === 'search');
-            document.getElementById('tabSaved').classList.toggle('active', tab === 'saved');
-
-            if (tab === 'saved') {
-                document.getElementById('searchBoxSection').style.display = 'none';
-                document.getElementById('nextTopicsSection').style.display = 'none';
-                renderSavedTab();
-            } else {
-                document.getElementById('searchBoxSection').style.display = 'block';
-                if (currentSearchResults.length > 0) {
-                    renderVideos(currentSearchResults);
-                    if (currentQuery) renderRelatedTopics(currentQuery);
-                } else {
-                    document.getElementById('videoGrid').innerHTML = '';
-                }
-            }
-        }
-
-        function renderSavedTab() {
-            const grid = document.getElementById('videoGrid');
-            if (savedVideos.length === 0) {
-                grid.innerHTML = '<p style="color: var(--text-muted); grid-column: 1/-1; text-align: center;">No saved videos yet. Click "🔖 Save" on any video card!</p>';
-                return;
-            }
-            renderVideos(savedVideos);
-        }
-
-        function toggleSummary(id) {
-            const box = document.getElementById(`summary-${id}`);
-            box.style.display = box.style.display === 'block' ? 'none' : 'block';
-        }
-
-        function renderRelatedTopics(query) {
-            const section = document.getElementById('nextTopicsSection');
-            const container = document.getElementById('topicPills');
-
-            let matches = [];
-            Object.keys(TOPIC_RELATIONS).forEach(key => {
-                if (query.includes(key)) matches = TOPIC_RELATIONS[key];
-            });
-
-            if (matches.length === 0) {
-                section.style.display = 'none';
-                return;
-            }
-
-            container.innerHTML = matches.map(topic => `
-        <span class="pill" onclick="quickSearch('${topic}')">${topic}</span>
-      `).join('');
-
-            section.style.display = 'block';
-        }
-    </script>
+    // --- Global State ---
+    let currentTab = 'search';
+    let timerInterval = null;
+    let timeLeft = 25 * 60;
+    let isRunning = false;
+
+    // --- Timer Logic ---
+    function updateTimerDisplay() {
+    const minutes = Math.floor(timeLeft / 60);
+    const seconds = timeLeft % 60;
+    const displayStr = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+    const timerEl = document.getElementById('minimizedTimerDisplay');
+    if (timerEl) timerEl.innerText = displayStr;
+    }
+
+    function setTimer(mins) {
+    clearInterval(timerInterval);
+    isRunning = false;
+    timeLeft = mins * 60;
+    updateTimerDisplay();
+    const startBtn = document.getElementById('startPauseBtn');
+    if (startBtn) startBtn.innerText = 'Start';
+    }
+
+    function toggleTimer() {
+    const startBtn = document.getElementById('startPauseBtn');
+    if (isRunning) {
+    clearInterval(timerInterval);
+    isRunning = false;
+    if (startBtn) startBtn.innerText = 'Start';
+    } else {
+    isRunning = true;
+    if (startBtn) startBtn.innerText = 'Pause';
+    timerInterval = setInterval(() => {
+    if (timeLeft > 0) {
+    timeLeft--;
+    updateTimerDisplay();
+    } else {
+    clearInterval(timerInterval);
+    isRunning = false;
+    if (startBtn) startBtn.innerText = 'Start';
+    alert('Focus session completed! Take a break.');
+    }
+    }, 1000);
+    }
+    }
+
+    function resetTimer() {
+    clearInterval(timerInterval);
+    isRunning = false;
+    timeLeft = 25 * 60;
+    updateTimerDisplay();
+    const startBtn = document.getElementById('startPauseBtn');
+    if (startBtn) startBtn.innerText = 'Start';
+    }
+
+    // --- Counts Updater ---
+    function updateCounts() {
+    const historyCountEl = document.getElementById('historyCount');
+    const savedCountEl = document.getElementById('savedCount');
+    const notesCountEl = document.getElementById('notesCount');
+
+    if (historyCountEl && typeof watchedVideos !== 'undefined') {
+    historyCountEl.innerText = watchedVideos.length;
+    }
+    if (savedCountEl && typeof savedVideos !== 'undefined') {
+    savedCountEl.innerText = savedVideos.length;
+    }
+    if (notesCountEl && typeof activeNotes !== 'undefined') {
+    notesCountEl.innerText = activeNotes.length;
+    }
+    }
+
+    // --- Tab Switching Logic ---
+    function hideAllSections() {
+    const searchBox = document.getElementById('searchBoxSection');
+    const feedSec = document.getElementById('feedSection') || document.getElementById('searchResults');
+    const historySec = document.getElementById('historySection');
+    const savedSec = document.getElementById('savedSection');
+    const notesSec = document.getElementById('notesSection');
+
+    if (searchBox) searchBox.style.display = 'none';
+    if (feedSec) feedSec.style.display = 'none';
+    if (historySec) historySec.style.display = 'none';
+    if (savedSec) savedSec.style.display = 'none';
+    if (notesSec) notesSec.style.display = 'none';
+
+    ['tabHistory', 'tabSearch', 'tabSaved', 'tabNotes'].forEach(id => {
+    const btn = document.getElementById(id);
+    if (btn) {
+    btn.classList.remove('active');
+    btn.style.background = 'transparent';
+    btn.style.color = 'var(--text-main)';
+    btn.style.fontWeight = 'normal';
+    }
+    });
+    }
+
+    function setActiveButton(btnId) {
+    const btn = document.getElementById(btnId);
+    if (btn) {
+    btn.classList.add('active');
+    btn.style.background = 'var(--accent-primary, #007bff)';
+    btn.style.color = 'white';
+    btn.style.fontWeight = '600';
+    }
+    }
+
+    function showSearchTab() {
+    hideAllSections();
+    setActiveButton('tabSearch');
+    currentTab = 'search';
+
+    const searchBox = document.getElementById('searchBoxSection');
+    const feedSec = document.getElementById('feedSection') || document.getElementById('searchResults');
+
+    if (searchBox) searchBox.style.display = 'block';
+    if (feedSec) feedSec.style.display = 'block';
+    if (typeof renderVideos === 'function' && typeof currentSearchResults !== 'undefined') {
+    renderVideos(currentSearchResults);
+    }
+    updateCounts();
+    }
+
+    function showHistoryTab() {
+    hideAllSections();
+    setActiveButton('tabHistory');
+    currentTab = 'history';
+
+    const historySec = document.getElementById('historySection');
+    if (historySec) historySec.style.display = 'block';
+    if (typeof renderHistory === 'function') renderHistory();
+    updateCounts();
+    }
+
+    function showSavedTab() {
+    hideAllSections();
+    setActiveButton('tabSaved');
+    currentTab = 'saved';
+
+    const savedSec = document.getElementById('savedSection');
+    if (savedSec) savedSec.style.display = 'block';
+    if (typeof renderSaved === 'function') renderSaved();
+    updateCounts();
+    }
+
+    function showNotesTab() {
+    hideAllSections();
+    setActiveButton('tabNotes');
+    currentTab = 'notes';
+
+    const notesSec = document.getElementById('notesSection');
+    if (notesSec) notesSec.style.display = 'block';
+    if (typeof renderNotesArchive === 'function') renderNotesArchive();
+    updateCounts();
+    }
+
+    // Initial count check on load
+    window.addEventListener('DOMContentLoaded', () => {
+    updateCounts();
+    updateTimerDisplay();
+    });
 </body>
 
 </html>
