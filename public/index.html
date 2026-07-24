@@ -676,25 +676,26 @@
         // --- Search Execution ---
         async function executeSearch() {
             const searchInput = document.getElementById('searchInput');
+            const durationFilter = document.getElementById('durationFilter');
+
             const query = searchInput ? searchInput.value.trim() : '';
+            const duration = durationFilter ? durationFilter.value : 'any';
 
             if (!query) return;
 
             const videoGrid = document.getElementById('videoGrid');
             if (videoGrid) {
-                videoGrid.innerHTML = '<p style="color: var(--text-muted); text-align: center; grid-column: 1 / -1; padding: 40px;">Searching for educational videos...</p>';
+                videoGrid.innerHTML = '<p style="color: var(--text-muted); text-align: center; grid-column: 1 / -1; padding: 40px;">Searching videos...</p>';
             }
 
             try {
-                const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+                // Pass both query and duration to your backend route
+                const response = await fetch(`/api/search?q=${encodeURIComponent(query)}&duration=${duration}`);
                 const data = await response.json();
                 currentSearchResults = data || [];
-                renderVideos(currentSearchResults, videoGrid, 'No videos found. Try another topic.');
+                renderVideos(currentSearchResults, videoGrid, 'No videos found.');
             } catch (err) {
                 console.error('Search error:', err);
-                if (videoGrid) {
-                    videoGrid.innerHTML = '<p style="color: #dc3545; text-align: center; grid-column: 1 / -1; padding: 40px;">Failed to load videos. Please try again.</p>';
-                }
             }
         }
 
