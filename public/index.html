@@ -805,16 +805,34 @@
 
         // --- FIXED VIDEO MODAL & SAVED/HISTORY LOOKUP ---
         function openVideoModal(videoId) {
-            // Ensure we have a plain string ID
-            const idString = typeof videoId === 'object' ? (videoId.videoId || '') : videoId;
-            if (!idString) return;
+            console.log("RAW VIDEO ID RECEIVED:", videoId); // Check your browser console (F12) to see this!
+
+            // Deep-clean the ID whether it's a string, an object, or nested inside a video object
+            let idString = '';
+            if (typeof videoId === 'object' && videoId !== null) {
+                idString = videoId.videoId || videoId.id?.videoId || videoId.id || '';
+            } else {
+                idString = videoId || '';
+            }
+
+            // If idString is still an object or invalid, bail out and log it
+            if (!idString || typeof idString === 'object') {
+                console.error("CRITICAL ERROR: Could not resolve video ID string from:", videoId);
+                alert("Error: Invalid Video ID format.");
+                return;
+            }
 
             const modal = document.getElementById('playerModal');
-            const iframe = document.getElementById('modalIframe') || document.getElementById('videoPlayer');
+            const playerElement = document.getElementById('modalIframe') || document.getElementById('videoPlayer');
 
-            if (iframe) {
-                iframe.src = `https://www.youtube.com/embed/${idString}?autoplay=1`;
+            if (playerElement) {
+                if (playerElement.tagName.toLowerCase() === 'div') {
+                    playerElement.innerHTML = `<iframe width="100%" height="100%" style="border: none; border-radius: 8px;" src="https://www.youtube.com/embed/${idString}?autoplay=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+                } else {
+                    playerElement.src = `https://www.youtube.com/embed/${idString}?autoplay=1`;
+                }
             }
+
             if (modal) {
                 modal.style.display = 'flex';
             }
@@ -822,13 +840,16 @@
             // Handle Watch History
             const allKnownVideos = [...currentSearchResults, ...JSON.parse(localStorage.getItem('savedVideos') || '[]'), ...JSON.parse(localStorage.getItem('watchHistory') || '[]')];
             const video = allKnownVideos.find(v => {
-                const vId = typeof v.id === 'object' ? v.id.videoId : v.id;
+                const vId = typeof v.id === 'object' ? (v.id.videoId || v.id.id) : v.id;
                 return vId === idString;
             });
 
             if (video) {
                 let history = JSON.parse(localStorage.getItem('watchHistory') || '[]');
-                if (!history.some(v => (typeof v.id === 'object' ? v.id.videoId : v.id) === idString)) {
+                if (!history.some(v => {
+                    const hId = typeof v.id === 'object' ? (v.id.videoId || v.id.id) : v.id;
+                    return hId === idString;
+                })) {
                     history.unshift(video);
                     localStorage.setItem('watchHistory', JSON.stringify(history));
                 }
