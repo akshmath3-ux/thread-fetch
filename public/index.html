@@ -600,6 +600,53 @@
         </div>
     </div>
     <script>
+        async function executeSearch() {
+            const searchInput = document.getElementById('searchInput');
+            const query = searchInput ? searchInput.value.trim() : '';
+
+            if (!query) return;
+
+            const videoGrid = document.getElementById('videoGrid');
+            if (videoGrid) {
+                videoGrid.innerHTML = '<p style="color: var(--text-muted); text-align: center; grid-column: 1 / -1; padding: 40px;">Searching for educational videos...</p>';
+            }
+
+            try {
+                const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+                const data = await response.json();
+
+                if (videoGrid) {
+                    videoGrid.innerHTML = '';
+                    if (data && data.length > 0) {
+                        data.forEach(video => {
+                            const card = document.createElement('div');
+                            card.style.cssText = 'background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; cursor: pointer;';
+                            card.innerHTML = `
+            <img src="${video.thumbnail || ''}" alt="${video.title || ''}" style="width: 100%; aspect-ratio: 16/9; object-fit: cover;" />
+            <div style="padding: 12px; display: flex; flex-direction: column; gap: 8px;">
+              <h4 style="font-size: 0.9rem; color: var(--text-main); margin: 0; line-height: 1.4;">${video.title || ''}</h4>
+              <span style="font-size: 0.75rem; color: var(--text-muted);">${video.channelTitle || ''}</span>
+            </div>
+          `;
+                            card.onclick = () => {
+                                if (typeof openVideoModal === 'function') {
+                                    openVideoModal(video);
+                                }
+                            };
+                            videoGrid.appendChild(card);
+                        });
+                    } else {
+                        videoGrid.innerHTML = '<p style="color: var(--text-muted); text-align: center; grid-column: 1 / -1; padding: 40px;">No videos found. Try another topic.</p>';
+                    }
+                }
+            } catch (err) {
+                console.error('Search error:', err);
+                if (videoGrid) {
+                    videoGrid.innerHTML = '<p style="color: #dc3545; text-align: center; grid-column: 1 / -1; padding: 40px;">Failed to load videos. Please try again.</p>';
+                }
+            }
+        }
+
         function handlePresetClick(topic) {
             const input = document.getElementById('searchInput');
             if (input) {
