@@ -620,19 +620,25 @@
                     if (data && data.length > 0) {
                         data.forEach(video => {
                             const card = document.createElement('div');
-                            card.style.cssText = 'background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; cursor: pointer;';
+                            card.style.cssText = 'background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column;';
                             card.innerHTML = `
-            <img src="${video.thumbnail || ''}" alt="${video.title || ''}" style="width: 100%; aspect-ratio: 16/9; object-fit: cover;" />
-            <div style="padding: 12px; display: flex; flex-direction: column; gap: 8px;">
-              <h4 style="font-size: 0.9rem; color: var(--text-main); margin: 0; line-height: 1.4;">${video.title || ''}</h4>
-              <span style="font-size: 0.75rem; color: var(--text-muted);">${video.channelTitle || ''}</span>
+            <div style="position: relative; cursor: pointer;" onclick="openVideoModal(${JSON.stringify(video).replace(/"/g, '&quot;')})">
+              <img src="${video.thumbnail || ''}" alt="${video.title || ''}" style="width: 100%; aspect-ratio: 16/9; object-fit: cover;" />
+              <div style="position: absolute; inset: 0; background: rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0'">
+                <span style="background: var(--accent-primary, #007bff); color: white; padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 0.85rem;">Watch & Take Notes</span>
+              </div>
+            </div>
+            <div style="padding: 14px; display: flex; flex-direction: column; gap: 10px; flex: 1; justify-content: space-between;">
+              <h4 style="font-size: 0.9rem; color: var(--text-main); margin: 0; line-height: 1.4; cursor: pointer;" onclick="openVideoModal(${JSON.stringify(video).replace(/"/g, '&quot;')})">${video.title || ''}</h4>
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 0.75rem; color: var(--text-muted);">${video.channelTitle || ''}</span>
+                <div style="display: flex; gap: 6px;">
+                  <button onclick="openVideoModal(${JSON.stringify(video).replace(/"/g, '&quot;')})" style="background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-main); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; cursor: pointer;">Watch</button>
+                  <button onclick="saveVideo(${JSON.stringify(video).replace(/"/g, '&quot;')})" style="background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-main); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; cursor: pointer;">Save</button>
+                </div>
+              </div>
             </div>
           `;
-                            card.onclick = () => {
-                                if (typeof openVideoModal === 'function') {
-                                    openVideoModal(video);
-                                }
-                            };
                             videoGrid.appendChild(card);
                         });
                     } else {
