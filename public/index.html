@@ -697,27 +697,22 @@
 
             if (!idString || typeof idString === 'object') {
                 console.error("CRITICAL ERROR: Could not resolve video ID string from:", videoId);
-                alert("Error: Invalid Video ID format.");
                 return;
             }
 
             const modal = document.getElementById('playerModal');
-            const playerElement = document.getElementById('modalIframe') || document.getElementById('youtubeiframe') || document.getElementById('videoPlayer');
 
-            if (playerElement) {
-                playerElement.style.width = '100%';
-                playerElement.style.height = '100%';
-                playerElement.style.position = 'relative';
-                playerElement.style.display = 'block';
+            // Directly target the original iframe or container ID
+            const targetElement = document.getElementById('youtubeIframe') || document.getElementById('modalIframe') || document.getElementById('videoPlayer');
 
-                // Inject iframe along with a fallback link in case YouTube blocks embedding
-                playerElement.innerHTML = `
-      <iframe width="100%" height="100%" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; border-radius: 8px;" src="https://www.youtube.com/embed/${idString}?autoplay=1&enablejsapi=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>
-      <div id="embedFallback" style="position: absolute; bottom: 15px; right: 15px; z-index: 5; background: rgba(0,0,0,0.8); padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; display: flex; gap: 8px; align-items: center;">
-        <span style="color: #aaa;">Video won't play?</span>
-        <a href="https://www.youtube.com/watch?v=${idString}" target="_blank" style="color: #fff; text-decoration: underline; font-weight: 600;">Open on YouTube</a>
-      </div>
-    `;
+            if (targetElement) {
+                // If it's literally an iframe in your HTML template, just update its src
+                if (targetElement.tagName.toLowerCase() === 'iframe') {
+                    targetElement.src = `https://www.youtube.com/embed/${idString}?autoplay=1`;
+                } else {
+                    // If it's a wrapper div, inject a clean iframe
+                    targetElement.innerHTML = `<iframe src="https://www.youtube.com/embed/${idString}?autoplay=1" style="width:100%; height:100%; border:none; border-radius:8px;" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+                }
             }
 
             if (modal) {
