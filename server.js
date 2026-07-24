@@ -9,7 +9,6 @@ const API_KEYS = [
     process.env.YOUTUBE_API_KEY_1 || process.env.YOUTUBE_API_KEY,
     process.env.YOUTUBE_API_KEY_2
 ].filter(Boolean);
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -85,6 +84,11 @@ function scoreVideo(video, channelCounts) {
     return Math.round(score * 10) / 10;
 }
 
+// YouTube category IDs to exclude — these are the categories responsible for
+// false-positive matches like music covers/tutorials and gameplay videos that
+// happen to share a keyword with the topic (e.g. "Science" matching a song title).
+const BLOCKED_CATEGORIES = ['10', '20']; // Music, Gaming
+
 async function fetchTopicResults(query, duration = 'any') {
     for (const apiKey of API_KEYS) {
         try {
@@ -118,7 +122,14 @@ async function fetchTopicResults(query, duration = 'any') {
             const detailsRes = await fetch(detailsUrl);
             const detailsData = await detailsRes.json();
 
-            return detailsData.items || [];
+            const items = detailsData.items || [];
+
+            // Filter out Music and Gaming category videos — catches false
+            // positives like "The Scientist" guitar tutorial or Kerbal Space
+            // Program gameplay showing up for a "Science" search.
+            const filtered = items.filter(v => !BLOCKED_CATEGORIES.includes(v.snippet.categoryId));
+
+            return filtered;
         } catch (err) {
             console.error("API Fetch Exception:", err);
         }
