@@ -688,20 +688,30 @@
         // 4. FIXED VIDEO MODAL & SAVE (Looks up the video object safely in JS, not HTML)
         // --- FIXED VIDEO MODAL & SAVED/HISTORY LOOKUP ---
         function openVideoModal(videoId) {
-            // 1. Ensure we have a plain string ID
-            const idString = typeof videoId === 'object' ? (videoId.videoId || '') : videoId;
-            if (!idString) return;
+            let idString = '';
+            if (typeof videoId === 'object' && videoId !== null) {
+                idString = videoId.videoId || videoId.id?.videoId || videoId.id || '';
+            } else {
+                idString = videoId || '';
+            }
+
+            if (!idString || typeof idString === 'object') {
+                console.error("CRITICAL ERROR: Could not resolve video ID string from:", videoId);
+                alert("Error: Invalid Video ID format.");
+                return;
+            }
 
             const modal = document.getElementById('playerModal');
             const playerElement = document.getElementById('modalIframe') || document.getElementById('videoPlayer');
 
-            // 2. THE FIX: Inject the iframe directly if it's a div, or update src if it's an iframe
             if (playerElement) {
-                if (playerElement.tagName.toLowerCase() === 'div') {
-                    playerElement.innerHTML = `<iframe width="100%" height="100%" style="border: none; border-radius: 8px;" src="https://www.youtube.com/embed/${idString}?autoplay=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
-                } else {
-                    playerElement.src = `https://www.youtube.com/embed/${idString}?autoplay=1`;
-                }
+                // Force the container to behave and size correctly, then inject the iframe
+                playerElement.style.width = '100%';
+                playerElement.style.height = '100%';
+                playerElement.style.position = 'relative';
+                playerElement.style.display = 'block';
+
+                playerElement.innerHTML = `<iframe width="100%" height="100%" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; border-radius: 8px;" src="https://www.youtube.com/embed/${idString}?autoplay=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
             }
 
             if (modal) {
@@ -711,13 +721,16 @@
             // Handle Watch History
             const allKnownVideos = [...currentSearchResults, ...JSON.parse(localStorage.getItem('savedVideos') || '[]'), ...JSON.parse(localStorage.getItem('watchHistory') || '[]')];
             const video = allKnownVideos.find(v => {
-                const vId = typeof v.id === 'object' ? v.id.videoId : v.id;
+                const vId = typeof v.id === 'object' ? (v.id.videoId || v.id.id) : v.id;
                 return vId === idString;
             });
 
             if (video) {
                 let history = JSON.parse(localStorage.getItem('watchHistory') || '[]');
-                if (!history.some(v => (typeof v.id === 'object' ? v.id.videoId : v.id) === idString)) {
+                if (!history.some(v => {
+                    const hId = typeof v.id === 'object' ? (v.id.videoId || v.id.id) : v.id;
+                    return hId === idString;
+                })) {
                     history.unshift(video);
                     localStorage.setItem('watchHistory', JSON.stringify(history));
                 }
