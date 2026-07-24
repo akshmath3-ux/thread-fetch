@@ -608,37 +608,46 @@
     <script>
         let currentSearchResults = [];
 
-        // --- Tab Switching & Filtering Logic ---
-        function switchTab(tabName) {
-            const searchSection = document.getElementById('searchSection') || document.querySelector('.search-container');
+        // 1. FIXED PRESET BUTTONS
+        function handlePresetClick(topic) {
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.value = topic;
+            }
+            executeSearch();
+        }
+
+        // 2. FIXED EDUCATIONAL SEARCH FILTER
+        async function executeSearch() {
+            const searchInput = document.getElementById('searchInput');
+            const durationFilter = document.getElementById('durationFilter');
+
+            let rawQuery = searchInput ? searchInput.value.trim() : '';
+            if (!rawQuery) return;
+
+            // Force educational content by appending keywords if they aren't already there
+            let fetchQuery = rawQuery.toLowerCase().includes('education') || rawQuery.toLowerCase().includes('tutorial')
+                ? rawQuery
+                : `${rawQuery} educational tutorial`;
+
+            const duration = durationFilter ? durationFilter.value : 'any';
+
             const videoGrid = document.getElementById('videoGrid');
+            if (videoGrid) {
+                videoGrid.innerHTML = '<p style="color: var(--text-muted); text-align: center; grid-column: 1 / -1; padding: 40px;">Searching for highly relevant educational videos...</p>';
+            }
 
-            // Update active button styling
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-
-            if (tabName === 'search') {
-                if (searchSection) searchSection.style.display = 'block';
-                renderVideos(currentSearchResults, videoGrid);
-            } else if (tabName === 'saved') {
-                if (searchSection) searchSection.style.display = 'none';
-                const saved = JSON.parse(localStorage.getItem('savedVideos') || '[]');
-                renderVideos(saved, videoGrid, 'No saved videos yet. Click "Save" on any video to add it here.');
-            } else if (tabName === 'history') {
-                if (searchSection) searchSection.style.display = 'none';
-                const history = JSON.parse(localStorage.getItem('watchHistory') || '[]');
-                renderVideos(history, videoGrid, 'No watch history yet. Watch a video to see it here.');
-            } else if (tabName === 'notes') {
-                if (searchSection) searchSection.style.display = 'none';
-                const notesMap = JSON.parse(localStorage.getItem('videoNotes') || '{}');
-                // Find videos that have notes
-                const allVideos = [...JSON.parse(localStorage.getItem('savedVideos') || '[]'), ...JSON.parse(localStorage.getItem('watchHistory') || '[]')];
-                const notedVideos = allVideos.filter(v => notesMap[v.id] && notesMap[v.id].trim().length > 0);
-                // Remove duplicates by ID
-                const uniqueNoted = Array.from(new Map(notedVideos.map(item => [item.id, item])).values());
-                renderVideos(uniqueNoted, videoGrid, 'No notes recorded yet. Type notes while watching a video to save them here.');
+            try {
+                const response = await fetch(`/api/search?q=${encodeURIComponent(fetchQuery)}&duration=${duration}`);
+                const data = await response.json();
+                currentSearchResults = data || [];
+                renderVideos(currentSearchResults, videoGrid, 'No educational videos found for this topic.');
+            } catch (err) {
+                console.error('Search error:', err);
             }
         }
 
+        // 3. BULLETPROOF RENDERER (Passes ID only, zero chance of HTML crashes)
         function renderVideos(videos, container, emptyMessage = 'No videos found.') {
             if (!container) return;
             container.innerHTML = '';
@@ -651,20 +660,22 @@
             videos.forEach((video) => {
                 const card = document.createElement('div');
                 card.style.cssText = 'background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column;';
+
+                // We pass ONLY the video.id to the onclick handlers. This guarantees it works every time.
                 card.innerHTML = `
-      <div style="position: relative; cursor: pointer;" onclick='openVideoModal(${JSON.stringify(video)})'>
-        <img src="${video.thumbnail || ''}" alt="${video.title || ''}" style="width: 100%; aspect-ratio: 16/9; object-fit: cover;" />
+      <div style="position: relative; cursor: pointer;" onclick="openVideoModal('${video.id}')">
+        <img src="${video.thumbnail || ''}" alt="Thumbnail" style="width: 100%; aspect-ratio: 16/9; object-fit: cover;" />
         <div style="position: absolute; inset: 0; background: rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0'">
-          <span style="background: var(--accent-primary, #007bff); color: white; padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 0.85rem;">Watch & Take Notes</span>
+          <span style="background: #007bff; color: white; padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 0.85rem;">Watch & Take Notes</span>
         </div>
       </div>
       <div style="padding: 14px; display: flex; flex-direction: column; gap: 10px; flex: 1; justify-content: space-between;">
-        <h4 style="font-size: 0.9rem; color: var(--text-main); margin: 0; line-height: 1.4; cursor: pointer;" onclick='openVideoModal(${JSON.stringify(video)})'>${video.title || ''}</h4>
+        <h4 style="font-size: 0.9rem; color: var(--text-main); margin: 0; line-height: 1.4; cursor: pointer;" onclick="openVideoModal('${video.id}')">${video.title || 'Educational Video'}</h4>
         <div style="display: flex; justify-content: space-between; align-items: center;">
           <span style="font-size: 0.75rem; color: var(--text-muted);">${video.channelTitle || ''}</span>
           <div style="display: flex; gap: 6px;">
-            <button onclick='openVideoModal(${JSON.stringify(video)})' style="background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-main); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; cursor: pointer;">Watch</button>
-            <button onclick='saveVideo(${JSON.stringify(video)})' style="background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-main); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; cursor: pointer;">Save</button>
+            <button onclick="openVideoModal('${video.id}')" style="background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-main); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; cursor: pointer;">Watch</button>
+            <button onclick="saveVideo('${video.id}')" style="background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-main); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; cursor: pointer;">Save</button>
           </div>
         </div>
       </div>
@@ -673,79 +684,49 @@
             });
         }
 
-        // --- Search Execution ---
-        async function executeSearch() {
-            const searchInput = document.getElementById('searchInput');
-            const durationFilter = document.getElementById('durationFilter');
+        // 4. FIXED VIDEO MODAL & SAVE (Looks up the video object safely in JS, not HTML)
+        function openVideoModal(videoId) {
+            // Find the video data safely
+            const allKnownVideos = [...currentSearchResults, ...JSON.parse(localStorage.getItem('savedVideos') || '[]'), ...JSON.parse(localStorage.getItem('watchHistory') || '[]')];
+            const video = allKnownVideos.find(v => v.id === videoId);
+            if (!video) return;
 
-            const query = searchInput ? searchInput.value.trim() : '';
-            const duration = durationFilter ? durationFilter.value : 'any';
-
-            if (!query) return;
-
-            const videoGrid = document.getElementById('videoGrid');
-            if (videoGrid) {
-                videoGrid.innerHTML = '<p style="color: var(--text-muted); text-align: center; grid-column: 1 / -1; padding: 40px;">Searching videos...</p>';
-            }
-
-            try {
-                // Pass both query and duration to your backend route
-                const response = await fetch(`/api/search?q=${encodeURIComponent(query)}&duration=${duration}`);
-                const data = await response.json();
-                currentSearchResults = data || [];
-                renderVideos(currentSearchResults, videoGrid, 'No videos found.');
-            } catch (err) {
-                console.error('Search error:', err);
-            }
-        }
-
-        // --- Modal & Playback Logic ---
-        function openVideoModal(video) {
             const modal = document.getElementById('playerModal');
             const iframe = document.getElementById('modalIframe') || document.getElementById('videoPlayer');
 
-            if (iframe && video.id) {
-                iframe.src = `https://www.youtube.com/embed/${video.id}?autoplay=1`;
+            if (iframe) {
+                iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
             }
-
             if (modal) {
                 modal.style.display = 'flex';
             }
 
-            // Add to Watch History
+            // Handle Watch History
             let history = JSON.parse(localStorage.getItem('watchHistory') || '[]');
-            if (!history.some(v => v.id === video.id)) {
+            if (!history.some(v => v.id === videoId)) {
                 history.unshift(video);
                 localStorage.setItem('watchHistory', JSON.stringify(history));
             }
 
-            // Load Notes into textarea if available
+            // Handle Notes
             const notesArea = document.getElementById('videoNotesInput') || document.querySelector('textarea');
             if (notesArea) {
                 const notesMap = JSON.parse(localStorage.getItem('videoNotes') || '{}');
-                notesArea.value = notesMap[video.id] || '';
+                notesArea.value = notesMap[videoId] || '';
                 notesArea.oninput = () => {
-                    notesMap[video.id] = notesArea.value;
+                    notesMap[videoId] = notesArea.value;
                     localStorage.setItem('videoNotes', JSON.stringify(notesMap));
                 };
             }
         }
 
-        function closeVideoModal() {
-            const modal = document.getElementById('playerModal');
-            const iframe = document.getElementById('modalIframe') || document.getElementById('videoPlayer');
+        function saveVideo(videoId) {
+            const allKnownVideos = [...currentSearchResults, ...JSON.parse(localStorage.getItem('watchHistory') || '[]')];
+            const video = allKnownVideos.find(v => v.id === videoId);
+            if (!video) return;
 
-            if (iframe) {
-                iframe.src = ''; // Stop video playback
-            }
-            if (modal) {
-                modal.style.display = 'none';
-            }
-        }
-
-        function saveVideo(video) {
             let saved = JSON.parse(localStorage.getItem('savedVideos') || '[]');
-            if (!saved.some(v => v.id === video.id)) {
+            if (!saved.some(v => v.id === videoId)) {
                 saved.push(video);
                 localStorage.setItem('savedVideos', JSON.stringify(saved));
                 alert('Video saved successfully!');
@@ -754,7 +735,14 @@
             }
         }
 
-        // Bind Close Button ("X") event listeners on load
+        function closeVideoModal() {
+            const modal = document.getElementById('playerModal');
+            const iframe = document.getElementById('modalIframe') || document.getElementById('videoPlayer');
+            if (iframe) iframe.src = ''; // Kills the video playback
+            if (modal) modal.style.display = 'none';
+        }
+
+        // Bind close button on DOM load
         document.addEventListener('DOMContentLoaded', () => {
             const closeBtn = document.querySelector('.close-modal') || document.getElementById('closeModal') || document.querySelector('#playerModal button');
             if (closeBtn) {
