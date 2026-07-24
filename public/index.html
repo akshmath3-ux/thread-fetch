@@ -608,7 +608,7 @@
     <script>
         let currentSearchResults = [];
 
-        // 1. FIXED PRESET BUTTONS
+        // Preset topic buttons (Design, Gaming, Coding, Science)
         function handlePresetClick(topic) {
             const searchInput = document.getElementById('searchInput');
             if (searchInput) {
@@ -617,7 +617,7 @@
             executeSearch();
         }
 
-        // 2. ACADEMIC SEARCH FILTER (Blocks kids/children channels)
+        // Runs a search against the backend, with academic filtering baked in
         async function executeSearch() {
             const searchInput = document.getElementById('searchInput');
             const durationFilter = document.getElementById('durationFilter');
@@ -645,7 +645,7 @@
             }
         }
 
-        // 3. BULLETPROOF RENDERER (Extracts string ID to fix black player screen)
+        // Renders a list of videos as cards into the given container
         function renderVideos(videos, container, emptyMessage = 'No videos found.') {
             if (!container) return;
             container.innerHTML = '';
@@ -656,7 +656,7 @@
             }
 
             videos.forEach((video) => {
-                // Extract real ID string if nested in an object
+                // Extract real ID string if nested in an object (search API vs stored objects)
                 const actualId = typeof video.id === 'object' ? (video.id.videoId || '') : (video.id || '');
                 if (!actualId) return;
 
@@ -664,162 +664,30 @@
                 card.style.cssText = 'background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column;';
 
                 card.innerHTML = `
-      <div style="position: relative; cursor: pointer;" onclick="openVideoModal('${actualId}')">
-        <img src="${video.thumbnail || ''}" alt="Thumbnail" style="width: 100%; aspect-ratio: 16/9; object-fit: cover;" />
-        <div style="position: absolute; inset: 0; background: rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0'">
-          <span style="background: var(--accent-primary, #007bff); color: white; padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 0.85rem;">Watch & Take Notes</span>
+    <div style="position: relative; cursor: pointer;" onclick="openVideoModal('${actualId}')">
+      <img src="${video.thumbnail || ''}" alt="Thumbnail" style="width: 100%; aspect-ratio: 16/9; object-fit: cover;" />
+      <div style="position: absolute; inset: 0; background: rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0'">
+        <span style="background: var(--accent-primary, #007bff); color: white; padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 0.85rem;">Watch & Take Notes</span>
+      </div>
+    </div>
+    <div style="padding: 14px; display: flex; flex-direction: column; gap: 10px; flex: 1; justify-content: space-between;">
+      <h4 style="font-size: 0.9rem; color: var(--text-main); margin: 0; line-height: 1.4; cursor: pointer;" onclick="openVideoModal('${actualId}')">${video.title || 'Educational Video'}</h4>
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 0.75rem; color: var(--text-muted);">${video.channelTitle || ''}</span>
+        <div style="display: flex; gap: 6px;">
+          <button onclick="openVideoModal('${actualId}')" style="background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-main); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; cursor: pointer;">Watch</button>
+          <button onclick="saveVideo('${actualId}')" style="background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-main); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; cursor: pointer;">Save</button>
         </div>
       </div>
-      <div style="padding: 14px; display: flex; flex-direction: column; gap: 10px; flex: 1; justify-content: space-between;">
-        <h4 style="font-size: 0.9rem; color: var(--text-main); margin: 0; line-height: 1.4; cursor: pointer;" onclick="openVideoModal('${actualId}')">${video.title || 'Educational Video'}</h4>
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <span style="font-size: 0.75rem; color: var(--text-muted);">${video.channelTitle || ''}</span>
-          <div style="display: flex; gap: 6px;">
-            <button onclick="openVideoModal('${actualId}')" style="background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-main); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; cursor: pointer;">Watch</button>
-            <button onclick="saveVideo('${actualId}')" style="background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-main); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; cursor: pointer;">Save</button>
-          </div>
-        </div>
-      </div>
-    `;
+    </div>
+  `;
                 container.appendChild(card);
             });
         }
 
-        // 4. FIXED VIDEO MODAL & SAVE (Looks up the video object safely in JS, not HTML)
-        // --- FIXED VIDEO MODAL & SAVED/HISTORY LOOKUP ---
+        // Opens the player modal and loads the given video into the real iframe (#youtubeIframe)
         function openVideoModal(videoId) {
-            let idString = '';
-            if (typeof videoId === 'object' && videoId !== null) {
-                idString = videoId.videoId || videoId.id?.videoId || videoId.id || '';
-            } else {
-                idString = videoId || '';
-            }
-
-            if (!idString || typeof idString === 'object') {
-                console.error("CRITICAL ERROR: Could not resolve video ID string from:", videoId);
-                return;
-            }
-
-            const modal = document.getElementById('playerModal');
-
-            // Directly target the original iframe or container ID
-            const targetElement = document.getElementById('youtubeIframe') || document.getElementById('modalIframe') || document.getElementById('videoPlayer');
-
-            if (targetElement) {
-                // If it's literally an iframe in your HTML template, just update its src
-                if (targetElement.tagName.toLowerCase() === 'iframe') {
-                    targetElement.src = `https://www.youtube.com/embed/${idString}?autoplay=1`;
-                } else {
-                    // If it's a wrapper div, inject a clean iframe
-                    targetElement.innerHTML = `<iframe src="https://www.youtube.com/embed/${idString}?autoplay=1" style="width:100%; height:100%; border:none; border-radius:8px;" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
-                }
-            }
-
-            if (modal) {
-                modal.style.display = 'flex';
-            }
-
-            // Handle Watch History
-            const allKnownVideos = [...currentSearchResults, ...JSON.parse(localStorage.getItem('savedVideos') || '[]'), ...JSON.parse(localStorage.getItem('watchHistory') || '[]')];
-            const video = allKnownVideos.find(v => {
-                const vId = typeof v.id === 'object' ? (v.id.videoId || v.id.id) : v.id;
-                return vId === idString;
-            });
-
-            if (video) {
-                let history = JSON.parse(localStorage.getItem('watchHistory') || '[]');
-                if (!history.some(v => {
-                    const hId = typeof v.id === 'object' ? (v.id.videoId || v.id.id) : v.id;
-                    return hId === idString;
-                })) {
-                    history.unshift(video);
-                    localStorage.setItem('watchHistory', JSON.stringify(history));
-                }
-            }
-
-            // Handle Notes
-            const notesArea = document.getElementById('videoNotesInput') || document.querySelector('textarea');
-            if (notesArea) {
-                const notesMap = JSON.parse(localStorage.getItem('videoNotes') || '{}');
-                notesArea.value = notesMap[idString] || '';
-                notesArea.oninput = () => {
-                    notesMap[idString] = notesArea.value;
-                    localStorage.setItem('videoNotes', JSON.stringify(notesMap));
-                };
-            }
-        }
-
-        function closeVideoModal() {
-            const modal = document.getElementById('playerModal');
-            const playerElement = document.getElementById('modalIframe') || document.getElementById('videoPlayer');
-
-            // Kills the video playback immediately when closing
-            if (playerElement) {
-                if (playerElement.tagName.toLowerCase() === 'div') {
-                    playerElement.innerHTML = '';
-                } else {
-                    playerElement.src = '';
-                }
-            }
-
-            if (modal) {
-                modal.style.display = 'none';
-            }
-        }
-
-        function saveVideo(videoId) {
-            const allKnownVideos = [...currentSearchResults, ...JSON.parse(localStorage.getItem('watchHistory') || '[]')];
-            const video = allKnownVideos.find(v => v.id === videoId);
-            if (!video) return;
-
-            let saved = JSON.parse(localStorage.getItem('savedVideos') || '[]');
-            if (!saved.some(v => v.id === videoId)) {
-                saved.push(video);
-                localStorage.setItem('savedVideos', JSON.stringify(saved));
-                alert('Video saved successfully!');
-            } else {
-                alert('Video is already saved.');
-            }
-        }
-
-        function closeVideoModal() {
-            const modal = document.getElementById('playerModal');
-            const iframe = document.getElementById('modalIframe') || document.getElementById('videoPlayer');
-            if (iframe) iframe.src = ''; // Kills the video playback
-            if (modal) modal.style.display = 'none';
-        }
-
-        // Bind close button on DOM load
-        document.addEventListener('DOMContentLoaded', () => {
-            const closeBtn = document.querySelector('.close-modal') || document.getElementById('closeModal') || document.querySelector('#playerModal button');
-            if (closeBtn) {
-                closeBtn.onclick = closeVideoModal;
-            }
-        });
-        // --- RESTORED TAB NAVIGATION ---
-        function showSearchTab() {
-            const searchSection = document.getElementById('searchBoxSection') || document.querySelector('.search-container');
-            if (searchSection) searchSection.style.display = 'block';
-            renderVideos(currentSearchResults, document.getElementById('videoGrid'), 'Search for a topic above!');
-        }
-
-        function showSavedTab() {
-            const searchSection = document.getElementById('searchBoxSection') || document.querySelector('.search-container');
-            if (searchSection) searchSection.style.display = 'none'; // Hides the search bar
-            const saved = JSON.parse(localStorage.getItem('savedVideos') || '[]');
-            renderVideos(saved, document.getElementById('videoGrid'), 'No saved videos yet. Click "Save" on a video to see it here.');
-        }
-
-        function showHistoryTab() {
-            const searchSection = document.getElementById('searchBoxSection') || document.querySelector('.search-container');
-            if (searchSection) searchSection.style.display = 'none';
-            const history = JSON.parse(localStorage.getItem('watchHistory') || '[]');
-            renderVideos(history, document.getElementById('videoGrid'), 'No watch history yet.');
-        }
-
-        // --- FIXED VIDEO MODAL & SAVED/HISTORY LOOKUP ---
-        function openVideoModal(videoId) {
-            console.log("RAW VIDEO ID RECEIVED:", videoId); // Check your browser console (F12) to see this!
+            console.log("RAW VIDEO ID RECEIVED:", videoId);
 
             // Deep-clean the ID whether it's a string, an object, or nested inside a video object
             let idString = '';
@@ -829,7 +697,6 @@
                 idString = videoId || '';
             }
 
-            // If idString is still an object or invalid, bail out and log it
             if (!idString || typeof idString === 'object') {
                 console.error("CRITICAL ERROR: Could not resolve video ID string from:", videoId);
                 alert("Error: Invalid Video ID format.");
@@ -837,14 +704,11 @@
             }
 
             const modal = document.getElementById('playerModal');
-            const playerElement = document.getElementById('modalIframe') || document.getElementById('videoPlayer');
+            // FIXED: this now matches the actual iframe id in the HTML (id="youtubeIframe")
+            const iframe = document.getElementById('youtubeIframe');
 
-            if (playerElement) {
-                if (playerElement.tagName.toLowerCase() === 'div') {
-                    playerElement.innerHTML = `<iframe width="100%" height="100%" style="border: none; border-radius: 8px;" src="https://www.youtube.com/embed/${idString}?autoplay=1" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
-                } else {
-                    playerElement.src = `https://www.youtube.com/embed/${idString}?autoplay=1`;
-                }
+            if (iframe) {
+                iframe.src = `https://www.youtube.com/embed/${idString}?autoplay=1`;
             }
 
             if (modal) {
@@ -852,7 +716,11 @@
             }
 
             // Handle Watch History
-            const allKnownVideos = [...currentSearchResults, ...JSON.parse(localStorage.getItem('savedVideos') || '[]'), ...JSON.parse(localStorage.getItem('watchHistory') || '[]')];
+            const allKnownVideos = [
+                ...currentSearchResults,
+                ...JSON.parse(localStorage.getItem('savedVideos') || '[]'),
+                ...JSON.parse(localStorage.getItem('watchHistory') || '[]'),
+            ];
             const video = allKnownVideos.find(v => {
                 const vId = typeof v.id === 'object' ? (v.id.videoId || v.id.id) : v.id;
                 return vId === idString;
@@ -866,11 +734,13 @@
                 })) {
                     history.unshift(video);
                     localStorage.setItem('watchHistory', JSON.stringify(history));
+                    const historyCountEl = document.getElementById('historyCount');
+                    if (historyCountEl) historyCountEl.textContent = history.length;
                 }
             }
 
-            // Handle Notes
-            const notesArea = document.getElementById('videoNotesInput') || document.querySelector('textarea');
+            // Handle Live Study Notes (loads any saved note for this video into the textarea)
+            const notesArea = document.getElementById('liveNoteInput');
             if (notesArea) {
                 const notesMap = JSON.parse(localStorage.getItem('videoNotes') || '{}');
                 notesArea.value = notesMap[idString] || '';
@@ -881,7 +751,111 @@
             }
         }
 
+        // Closes the modal and stops playback (clearing src, not just hiding, so audio doesn't keep playing)
+        function closePlayerModal() {
+            const modal = document.getElementById('playerModal');
+            // FIXED: this now matches the actual iframe id in the HTML (id="youtubeIframe")
+            const iframe = document.getElementById('youtubeIframe');
+            if (iframe) iframe.src = '';
+            if (modal) modal.style.display = 'none';
+        }
 
+        function saveVideo(videoId) {
+            const allKnownVideos = [...currentSearchResults, ...JSON.parse(localStorage.getItem('watchHistory') || '[]')];
+            const video = allKnownVideos.find(v => {
+                const vId = typeof v.id === 'object' ? (v.id.videoId || v.id.id) : v.id;
+                return vId === videoId;
+            });
+            if (!video) return;
+
+            let saved = JSON.parse(localStorage.getItem('savedVideos') || '[]');
+            const alreadySaved = saved.some(v => {
+                const vId = typeof v.id === 'object' ? (v.id.videoId || v.id.id) : v.id;
+                return vId === videoId;
+            });
+
+            if (!alreadySaved) {
+                saved.push(video);
+                localStorage.setItem('savedVideos', JSON.stringify(saved));
+                const savedCountEl = document.getElementById('savedCount');
+                if (savedCountEl) savedCountEl.textContent = saved.length;
+                alert('Video saved successfully!');
+            } else {
+                alert('Video is already saved.');
+            }
+        }
+
+        // --- Tab navigation ---
+        function showSearchTab() {
+            setActiveTab('tabSearch');
+            const searchSection = document.getElementById('searchBoxSection');
+            if (searchSection) searchSection.style.display = 'block';
+            const notesSection = document.getElementById('notesSection');
+            if (notesSection) notesSection.style.display = 'none';
+            renderVideos(currentSearchResults, document.getElementById('videoGrid'), 'Search for a topic above!');
+        }
+
+        function showSavedTab() {
+            setActiveTab('tabSaved');
+            const searchSection = document.getElementById('searchBoxSection');
+            if (searchSection) searchSection.style.display = 'none';
+            const notesSection = document.getElementById('notesSection');
+            if (notesSection) notesSection.style.display = 'none';
+            const saved = JSON.parse(localStorage.getItem('savedVideos') || '[]');
+            renderVideos(saved, document.getElementById('videoGrid'), 'No saved videos yet. Click "Save" on a video to see it here.');
+        }
+
+        function showHistoryTab() {
+            setActiveTab('tabHistory');
+            const searchSection = document.getElementById('searchBoxSection');
+            if (searchSection) searchSection.style.display = 'none';
+            const notesSection = document.getElementById('notesSection');
+            if (notesSection) notesSection.style.display = 'none';
+            const history = JSON.parse(localStorage.getItem('watchHistory') || '[]');
+            renderVideos(history, document.getElementById('videoGrid'), 'No watch history yet.');
+        }
+
+        function showNotesTab() {
+            setActiveTab('tabNotes');
+            const searchSection = document.getElementById('searchBoxSection');
+            if (searchSection) searchSection.style.display = 'none';
+            const videoGrid = document.getElementById('videoGrid');
+            if (videoGrid) videoGrid.innerHTML = '';
+            const notesSection = document.getElementById('notesSection');
+            if (notesSection) notesSection.style.display = 'block';
+        }
+
+        function setActiveTab(activeId) {
+            ['tabHistory', 'tabSearch', 'tabSaved', 'tabNotes'].forEach(id => {
+                const btn = document.getElementById(id);
+                if (!btn) return;
+                if (id === activeId) {
+                    btn.style.background = 'var(--accent-primary, #007bff)';
+                    btn.style.color = 'white';
+                    btn.style.fontWeight = '600';
+                } else {
+                    btn.style.background = 'transparent';
+                    btn.style.color = 'var(--text-main)';
+                    btn.style.fontWeight = 'normal';
+                }
+            });
+        }
+
+        // Auto-save handler referenced by the textarea's oninput in the HTML
+        function autoSaveCurrentNote() {
+            // Actual saving logic lives in openVideoModal's notesArea.oninput,
+            // this just exists so the inline oninput="autoSaveCurrentNote()" doesn't error.
+        }
+
+        // Initialize saved/history counts on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            const saved = JSON.parse(localStorage.getItem('savedVideos') || '[]');
+            const history = JSON.parse(localStorage.getItem('watchHistory') || '[]');
+            const savedCountEl = document.getElementById('savedCount');
+            const historyCountEl = document.getElementById('historyCount');
+            if (savedCountEl) savedCountEl.textContent = saved.length;
+            if (historyCountEl) historyCountEl.textContent = history.length;
+        });
     </script>
 </body>
 
