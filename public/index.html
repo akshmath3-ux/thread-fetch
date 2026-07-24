@@ -749,6 +749,62 @@
                 closeBtn.onclick = closeVideoModal;
             }
         });
+        // --- RESTORED TAB NAVIGATION ---
+        function showSearchTab() {
+            const searchSection = document.getElementById('searchBoxSection') || document.querySelector('.search-container');
+            if (searchSection) searchSection.style.display = 'block';
+            renderVideos(currentSearchResults, document.getElementById('videoGrid'), 'Search for a topic above!');
+        }
+
+        function showSavedTab() {
+            const searchSection = document.getElementById('searchBoxSection') || document.querySelector('.search-container');
+            if (searchSection) searchSection.style.display = 'none'; // Hides the search bar
+            const saved = JSON.parse(localStorage.getItem('savedVideos') || '[]');
+            renderVideos(saved, document.getElementById('videoGrid'), 'No saved videos yet. Click "Save" on a video to see it here.');
+        }
+
+        function showHistoryTab() {
+            const searchSection = document.getElementById('searchBoxSection') || document.querySelector('.search-container');
+            if (searchSection) searchSection.style.display = 'none';
+            const history = JSON.parse(localStorage.getItem('watchHistory') || '[]');
+            renderVideos(history, document.getElementById('videoGrid'), 'No watch history yet.');
+        }
+
+        // --- FIXED VIDEO MODAL (Forces playback immediately) ---
+        function openVideoModal(videoId) {
+            // 1. Force the iframe to load the video and open the modal immediately
+            const modal = document.getElementById('playerModal');
+            const iframe = document.getElementById('modalIframe') || document.getElementById('videoPlayer');
+
+            if (iframe) {
+                iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+            }
+            if (modal) {
+                modal.style.display = 'flex';
+            }
+
+            // 2. Handle History and Notes safely in the background
+            const allKnownVideos = [...currentSearchResults, ...JSON.parse(localStorage.getItem('savedVideos') || '[]'), ...JSON.parse(localStorage.getItem('watchHistory') || '[]')];
+            const video = allKnownVideos.find(v => v.id === videoId);
+
+            if (video) {
+                let history = JSON.parse(localStorage.getItem('watchHistory') || '[]');
+                if (!history.some(v => v.id === videoId)) {
+                    history.unshift(video);
+                    localStorage.setItem('watchHistory', JSON.stringify(history));
+                }
+            }
+
+            const notesArea = document.getElementById('videoNotesInput') || document.querySelector('textarea');
+            if (notesArea) {
+                const notesMap = JSON.parse(localStorage.getItem('videoNotes') || '{}');
+                notesArea.value = notesMap[videoId] || '';
+                notesArea.oninput = () => {
+                    notesMap[videoId] = notesArea.value;
+                    localStorage.setItem('videoNotes', JSON.stringify(notesMap));
+                };
+            }
+        }
     </script>
 </body>
 
