@@ -582,17 +582,22 @@
         function autoSaveCurrentNote() {
             if (!activeVideoData) return;
             const vidId = activeVideoData.id || activeVideoData.videoId;
-            const text = document.getElementById('liveNoteInput').value;
+            const textInput = document.getElementById('liveNoteInput');
+            if (!vidId || !textInput) return;
 
+            const text = textInput.value;
+
+            // Save or update the note associated with this specific video ID
             savedNotes[vidId] = {
                 videoId: vidId,
-                title: activeVideoData.title,
+                title: activeVideoData.title || 'Study Session',
                 channel: activeVideoData.channelTitle || 'Educational Source',
-                thumbnail: activeVideoData.thumbnail,
+                thumbnail: activeVideoData.thumbnail || '',
                 text: text,
                 updatedAt: new Date().toLocaleDateString()
             };
 
+            // Commit immediately to localStorage so refresh doesn't wipe it
             localStorage.setItem('focus_hub_notes', JSON.stringify(savedNotes));
             updateNotesCount();
 
@@ -706,24 +711,26 @@
             }
 
             if (videoObj) {
-                // Normalize ID format just in case
-                const cleanId = videoObj.id?.videoId || videoObj.id;
+                // Normalize properties so the modal and notes panel pick them up correctly
+                const cleanId = videoObj.id?.videoId || videoObj.id || videoObj.videoId;
                 const normalizedObj = {
                     id: cleanId,
+                    videoId: cleanId,
                     title: videoObj.title || videoObj.snippet?.title,
-                    channel: videoObj.channel || videoObj.snippet?.channelTitle,
-                    thumbnail: videoObj.thumbnail || videoObj.snippet?.thumbnails?.high?.url || videoObj.snippet?.thumbnails?.medium?.url,
-                    description: videoObj.description || videoObj.snippet?.description
+                    channelTitle: videoObj.channelTitle || videoObj.snippet?.channelTitle || 'Educational Source',
+                    thumbnail: videoObj.thumbnail || videoObj.thumbnails?.high?.url || videoObj.snippet?.thumbnails?.medium?.url
                 };
 
-                addToWatchHistory(normalizedObj);
+                // Open the modal using our integrated notes-ready function
+                openPlayerModal(normalizedObj);
+            } else {
+                // Fallback if object isn't found in arrays
+                openPlayerModal({ id: id, videoId: id, title: 'Study Session', channelTitle: 'Educational Source', thumbnail: '' });
+            }
 
-                const modal = document.getElementById('playerModal');
-                const iframe = document.getElementById('youtubeIframe');
-                if (iframe && modal) {
-                    iframe.src = `https://www.youtube-nocookie.com/embed/${cleanId}?autoplay=1&rel=0`;
-                    modal.style.display = 'flex';
-                }
+            // Track in watched history if your app handles it
+            if (typeof addToHistory === 'function') {
+                addToHistory(id);
             }
         }
         let totalSeconds = 25 * 60;
