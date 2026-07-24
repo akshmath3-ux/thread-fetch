@@ -84,15 +84,43 @@ function scoreVideo(video, channelCounts) {
     return Math.round(score * 10) / 10;
 }
 
-// YouTube category IDs to exclude — these are the categories responsible for
-// false-positive matches like music covers/tutorials and gameplay videos that
-// happen to share a keyword with the topic (e.g. "Science" matching a song title).
-const BLOCKED_CATEGORIES = ['10', '20']; // Music, Gaming
+// Categories that are almost never legitimate educational/career content —
+// filtering these out at the category level (not just keyword matching)
+// catches things a text filter alone would miss.
+const BLOCKED_CATEGORIES = [
+    '10', // Music
+    '20', // Gaming
+    '1',  // Film & Animation
+    '23', // Comedy
+    '24', // Entertainment
+    '17', // Sports
+    '15', // Pets & Animals
+    '2',  // Autos & Vehicles
+    '19', // Travel & Events
+];
+
+// Words that, when they dominate a title, almost always signal the video is
+// NOT actually about the searched topic — even though the search keyword
+// happens to appear somewhere in it (e.g. "gym BAG" sewing tutorial).
+const NOISE_WORDS = [
+    'diy', 'craft', 'sewing', 'sew', 'dance tutorial', 'choreography',
+    'workout routine', 'minecraft', 'asmr', 'prank', 'reaction',
+    'unboxing', 'haul', 'makeup', 'recipe', 'cooking',
+];
+
+function looksLikeNoise(title) {
+    const lower = title.toLowerCase();
+    return NOISE_WORDS.some(word => lower.includes(word));
+}
 
 async function fetchTopicResults(query, duration = 'any') {
+    // Push YouTube's own ranking away from common false-positive genres
+    // (craft/DIY, dance, gameplay) before results even come back.
+    const refinedQuery = `${query} -diy -craft -sewing -dance -"how to make" -minecraft -asmr`;
+
     for (const apiKey of API_KEYS) {
         try {
-            let searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(query)}&type=video&maxResults=10&key=${apiKey}`;
+            let searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(refinedQuery)}&type=video&maxResults=15&key=${apiKey}`;
             if (duration !== 'any') {
                 searchUrl += `&videoDuration=${duration}`;
             }
@@ -124,12 +152,18 @@ async function fetchTopicResults(query, duration = 'any') {
 
             const items = detailsData.items || [];
 
-            // Filter out Music and Gaming category videos — catches false
-            // positives like "The Scientist" guitar tutorial or Kerbal Space
-            // Program gameplay showing up for a "Science" search.
-            const filtered = items.filter(v => !BLOCKED_CATEGORIES.includes(v.snippet.categoryId));
+            // Layer 1: hard category block (Music, Gaming, Sports, etc.)
+            const categoryFiltered = items.filter(
+                v => !BLOCKED_CATEGORIES.includes(v.snippet.categoryId)
+            );
 
-            return filtered;
+            // Layer 2: reject titles dominated by known noise words
+            // (catches Howto & Style false positives category blocking can't)
+            const noiseFiltered = categoryFiltered.filter(
+                v => !looksLikeNoise(v.snippet.title)
+            );
+
+            return noiseFiltered;
         } catch (err) {
             console.error("API Fetch Exception:", err);
         }
