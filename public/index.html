@@ -617,7 +617,7 @@
             executeSearch();
         }
 
-        // 2. FIXED EDUCATIONAL SEARCH FILTER
+        // 2. ACADEMIC SEARCH FILTER (Blocks kids/children channels)
         async function executeSearch() {
             const searchInput = document.getElementById('searchInput');
             const durationFilter = document.getElementById('durationFilter');
@@ -625,29 +625,27 @@
             let rawQuery = searchInput ? searchInput.value.trim() : '';
             if (!rawQuery) return;
 
-            // Force educational content by appending keywords if they aren't already there
-            let fetchQuery = rawQuery.toLowerCase().includes('education') || rawQuery.toLowerCase().includes('tutorial')
-                ? rawQuery
-                : `${rawQuery} educational tutorial`;
+            // Appends academic terms and explicitly bans toddler/kids channels
+            let fetchQuery = `${rawQuery} lecture OR tutorial -kids -children -toddler -toy -nursery -ryan -"rock n learn"`;
 
             const duration = durationFilter ? durationFilter.value : 'any';
 
             const videoGrid = document.getElementById('videoGrid');
             if (videoGrid) {
-                videoGrid.innerHTML = '<p style="color: var(--text-muted); text-align: center; grid-column: 1 / -1; padding: 40px;">Searching for highly relevant educational videos...</p>';
+                videoGrid.innerHTML = '<p style="color: var(--text-muted); text-align: center; grid-column: 1 / -1; padding: 40px;">Searching for academic videos...</p>';
             }
 
             try {
                 const response = await fetch(`/api/search?q=${encodeURIComponent(fetchQuery)}&duration=${duration}`);
                 const data = await response.json();
                 currentSearchResults = data || [];
-                renderVideos(currentSearchResults, videoGrid, 'No educational videos found for this topic.');
+                renderVideos(currentSearchResults, videoGrid, 'No suitable academic videos found.');
             } catch (err) {
                 console.error('Search error:', err);
             }
         }
 
-        // 3. BULLETPROOF RENDERER (Passes ID only, zero chance of HTML crashes)
+        // 3. BULLETPROOF RENDERER (Extracts string ID to fix black player screen)
         function renderVideos(videos, container, emptyMessage = 'No videos found.') {
             if (!container) return;
             container.innerHTML = '';
@@ -658,24 +656,27 @@
             }
 
             videos.forEach((video) => {
+                // Extract real ID string if nested in an object
+                const actualId = typeof video.id === 'object' ? (video.id.videoId || '') : (video.id || '');
+                if (!actualId) return;
+
                 const card = document.createElement('div');
                 card.style.cssText = 'background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column;';
 
-                // We pass ONLY the video.id to the onclick handlers. This guarantees it works every time.
                 card.innerHTML = `
-      <div style="position: relative; cursor: pointer;" onclick="openVideoModal('${video.id}')">
+      <div style="position: relative; cursor: pointer;" onclick="openVideoModal('${actualId}')">
         <img src="${video.thumbnail || ''}" alt="Thumbnail" style="width: 100%; aspect-ratio: 16/9; object-fit: cover;" />
         <div style="position: absolute; inset: 0; background: rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0'">
-          <span style="background: #007bff; color: white; padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 0.85rem;">Watch & Take Notes</span>
+          <span style="background: var(--accent-primary, #007bff); color: white; padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 0.85rem;">Watch & Take Notes</span>
         </div>
       </div>
       <div style="padding: 14px; display: flex; flex-direction: column; gap: 10px; flex: 1; justify-content: space-between;">
-        <h4 style="font-size: 0.9rem; color: var(--text-main); margin: 0; line-height: 1.4; cursor: pointer;" onclick="openVideoModal('${video.id}')">${video.title || 'Educational Video'}</h4>
+        <h4 style="font-size: 0.9rem; color: var(--text-main); margin: 0; line-height: 1.4; cursor: pointer;" onclick="openVideoModal('${actualId}')">${video.title || 'Educational Video'}</h4>
         <div style="display: flex; justify-content: space-between; align-items: center;">
           <span style="font-size: 0.75rem; color: var(--text-muted);">${video.channelTitle || ''}</span>
           <div style="display: flex; gap: 6px;">
-            <button onclick="openVideoModal('${video.id}')" style="background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-main); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; cursor: pointer;">Watch</button>
-            <button onclick="saveVideo('${video.id}')" style="background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-main); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; cursor: pointer;">Save</button>
+            <button onclick="openVideoModal('${actualId}')" style="background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-main); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; cursor: pointer;">Watch</button>
+            <button onclick="saveVideo('${actualId}')" style="background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-main); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; cursor: pointer;">Save</button>
           </div>
         </div>
       </div>
@@ -770,41 +771,50 @@
             renderVideos(history, document.getElementById('videoGrid'), 'No watch history yet.');
         }
 
-        // --- FIXED VIDEO MODAL (Forces playback immediately) ---
+        // --- FIXED VIDEO MODAL & SAVED/HISTORY LOOKUP ---
         function openVideoModal(videoId) {
-            // 1. Force the iframe to load the video and open the modal immediately
+            // Ensure we have a plain string ID
+            const idString = typeof videoId === 'object' ? (videoId.videoId || '') : videoId;
+            if (!idString) return;
+
             const modal = document.getElementById('playerModal');
             const iframe = document.getElementById('modalIframe') || document.getElementById('videoPlayer');
 
             if (iframe) {
-                iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+                iframe.src = `https://www.youtube.com/embed/${idString}?autoplay=1`;
             }
             if (modal) {
                 modal.style.display = 'flex';
             }
 
-            // 2. Handle History and Notes safely in the background
+            // Handle Watch History
             const allKnownVideos = [...currentSearchResults, ...JSON.parse(localStorage.getItem('savedVideos') || '[]'), ...JSON.parse(localStorage.getItem('watchHistory') || '[]')];
-            const video = allKnownVideos.find(v => v.id === videoId);
+            const video = allKnownVideos.find(v => {
+                const vId = typeof v.id === 'object' ? v.id.videoId : v.id;
+                return vId === idString;
+            });
 
             if (video) {
                 let history = JSON.parse(localStorage.getItem('watchHistory') || '[]');
-                if (!history.some(v => v.id === videoId)) {
+                if (!history.some(v => (typeof v.id === 'object' ? v.id.videoId : v.id) === idString)) {
                     history.unshift(video);
                     localStorage.setItem('watchHistory', JSON.stringify(history));
                 }
             }
 
+            // Handle Notes
             const notesArea = document.getElementById('videoNotesInput') || document.querySelector('textarea');
             if (notesArea) {
                 const notesMap = JSON.parse(localStorage.getItem('videoNotes') || '{}');
-                notesArea.value = notesMap[videoId] || '';
+                notesArea.value = notesMap[idString] || '';
                 notesArea.oninput = () => {
-                    notesMap[videoId] = notesArea.value;
+                    notesMap[idString] = notesArea.value;
                     localStorage.setItem('videoNotes', JSON.stringify(notesMap));
                 };
             }
         }
+
+
     </script>
 </body>
 
