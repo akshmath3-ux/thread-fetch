@@ -447,57 +447,52 @@
 
 <body>
     <!-- Pomodoro Timer Container -->
-    <!-- Top Header & Minimized Timer Bar -->
-    <div style="max-width: 800px; margin: 0 auto; padding: 20px 0; display: flex; flex-direction: column; gap: 15px;">
-
-        <!-- Minimized Timer Bar -->
-        <div
-            style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <span
-                    style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Focus
-                    Timer</span>
-                <span id="minimizedTimerDisplay"
-                    style="font-size: 1.15rem; font-weight: 700; color: var(--text-main); font-family: monospace;">25:00</span>
-            </div>
-            <div style="display: flex; align-items: center; gap: 6px;">
-                <button onclick="setTimer(15)"
-                    style="background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-main); padding: 3px 8px; border-radius: 6px; font-size: 0.75rem; cursor: pointer;">15m</button>
-                <button onclick="setTimer(25)"
-                    style="background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-main); padding: 3px 8px; border-radius: 6px; font-size: 0.75rem; cursor: pointer;">25m</button>
-                <button onclick="setTimer(45)"
-                    style="background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-main); padding: 3px 8px; border-radius: 6px; font-size: 0.75rem; cursor: pointer;">45m</button>
-                <button id="startPauseBtn" onclick="toggleTimer()"
-                    style="background: var(--accent-primary, #007bff); border: none; color: white; padding: 3px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer;">Start</button>
-                <button onclick="resetTimer()"
-                    style="background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-muted); padding: 3px 8px; border-radius: 6px; font-size: 0.75rem; cursor: pointer;">Reset</button>
-            </div>
+    <!-- Minimized Timer Bar with Breaks -->
+    <div
+        style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <span
+                style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Focus
+                Timer</span>
+            <span id="minimizedTimerDisplay"
+                style="font-size: 1.15rem; font-weight: 700; color: var(--text-main); font-family: monospace;">25:00</span>
         </div>
-
-        <!-- Centered FocusHub Logo -->
-        <div style="display: flex; justify-content: center; align-items: center; gap: 8px;">
-            <h1
-                style="display: flex; align-items: center; gap: 8px; font-size: 1.7rem; color: var(--text-main); margin: 0;">
-                <span>🎯</span> FocusHub
-            </h1>
+        <div style="display: flex; align-items: center; gap: 5px; flex-wrap: wrap;">
+            <button onclick="setTimer(15)"
+                style="background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-main); padding: 3px 7px; border-radius: 6px; font-size: 0.7rem; cursor: pointer;">15m</button>
+            <button onclick="setTimer(25)"
+                style="background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-main); padding: 3px 7px; border-radius: 6px; font-size: 0.7rem; cursor: pointer;">25m</button>
+            <button onclick="setTimer(45)"
+                style="background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-main); padding: 3px 7px; border-radius: 6px; font-size: 0.7rem; cursor: pointer;">45m</button>
+            <button id="startPauseBtn" onclick="toggleTimer()"
+                style="background: var(--accent-primary, #007bff); border: none; color: white; padding: 3px 10px; border-radius: 6px; font-size: 0.7rem; font-weight: 600; cursor: pointer;">Start</button>
+            <button onclick="resetTimer()"
+                style="background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-muted); padding: 3px 7px; border-radius: 6px; font-size: 0.7rem; cursor: pointer;">Reset</button>
+            <button onclick="setTimer(5)"
+                style="background: #198754; border: none; color: white; padding: 3px 8px; border-radius: 6px; font-size: 0.7rem; cursor: pointer;">Short
+                Break (5m)</button>
+            <button onclick="setTimer(15)"
+                style="background: #198754; border: none; color: white; padding: 3px 8px; border-radius: 6px; font-size: 0.7rem; cursor: pointer;">Long
+                Break (15m)</button>
         </div>
+    </div>
 
-        <!-- Systematic Navigation Bar -->
-        <div class="nav-tabs"
-            style="display: flex; justify-content: center; align-items: center; gap: 6px; background: var(--bg-card); padding: 6px; border-radius: 12px; border: 1px solid var(--border-color);">
-            <button class="tab-btn" id="tabHistory" onclick="showHistoryTab()"
-                style="flex: 1; text-align: center; padding: 7px 10px; border-radius: 8px; border: none; background: transparent; color: var(--text-main); cursor: pointer; font-size: 0.85rem;">History
-                (<span id="historyCount">0</span>)</button>
-            <button class="tab-btn active" id="tabSearch" onclick="showSearchTab()"
-                style="flex: 1; text-align: center; padding: 7px 10px; border-radius: 8px; border: none; background: var(--accent-primary, #007bff); color: white; cursor: pointer; font-size: 0.85rem; font-weight: 600;">Search
-                Feed</button>
-            <button class="tab-btn" id="tabSaved" onclick="showSavedTab()"
-                style="flex: 1; text-align: center; padding: 7px 10px; border-radius: 8px; border: none; background: transparent; color: var(--text-main); cursor: pointer; font-size: 0.85rem;">Saved
-                (<span id="savedCount">0</span>)</button>
-            <button class="tab-btn" id="tabNotes" onclick="showNotesTab()"
-                style="flex: 1; text-align: center; padding: 7px 10px; border-radius: 8px; border: none; background: transparent; color: var(--text-main); cursor: pointer; font-size: 0.85rem;">Notes
-                (<span id="notesCount">0</span>)</button>
-        </div>
+    <!-- Systematic Navigation Bar -->
+    <div class="nav-tabs"
+        style="display: flex; justify-content: center; align-items: center; gap: 6px; background: var(--bg-card); padding: 6px; border-radius: 12px; border: 1px solid var(--border-color);">
+        <button class="tab-btn" id="tabHistory" onclick="showHistoryTab()"
+            style="flex: 1; text-align: center; padding: 7px 10px; border-radius: 8px; border: none; background: transparent; color: var(--text-main); cursor: pointer; font-size: 0.85rem;">History
+            (<span id="historyCount">0</span>)</button>
+        <button class="tab-btn active" id="tabSearch" onclick="showSearchTab()"
+            style="flex: 1; text-align: center; padding: 7px 10px; border-radius: 8px; border: none; background: var(--accent-primary, #007bff); color: white; cursor: pointer; font-size: 0.85rem; font-weight: 600;">Search
+            Feed</button>
+        <button class="tab-btn" id="tabSaved" onclick="showSavedTab()"
+            style="flex: 1; text-align: center; padding: 7px 10px; border-radius: 8px; border: none; background: transparent; color: var(--text-main); cursor: pointer; font-size: 0.85rem;">Saved
+            (<span id="savedCount">0</span>)</button>
+        <button class="tab-btn" id="tabNotes" onclick="showNotesTab()"
+            style="flex: 1; text-align: center; padding: 7px 10px; border-radius: 8px; border: none; background: transparent; color: var(--text-main); cursor: pointer; font-size: 0.85rem;">Notes
+            (<span id="notesCount">0</span>)</button>
+    </div>
 
     </div>
 
@@ -597,6 +592,72 @@
     </div>
 
     <script>
+        function hideAllSections() {
+            const searchBox = document.getElementById('searchBoxSection');
+            const feedSec = document.getElementById('feedSection') || document.getElementById('searchResults');
+            const historySec = document.getElementById('historySection');
+            const savedSec = document.getElementById('savedSection');
+            const notesSec = document.getElementById('notesSection');
+
+            if (searchBox) searchBox.style.display = 'none';
+            if (feedSec) feedSec.style.display = 'none';
+            if (historySec) historySec.style.display = 'none';
+            if (savedSec) savedSec.style.display = 'none';
+            if (notesSec) notesSec.style.display = 'none';
+
+            document.querySelectorAll('.tab-btn').forEach(b => {
+                b.classList.remove('active');
+                b.style.background = 'transparent';
+                b.style.color = 'var(--text-main)';
+                b.style.fontWeight = 'normal';
+            });
+        }
+
+        function setActiveButton(btnId) {
+            const btn = document.getElementById(btnId);
+            if (btn) {
+                btn.classList.add('active');
+                btn.style.background = 'var(--accent-primary, #007bff)';
+                btn.style.color = 'white';
+                btn.style.fontWeight = '600';
+            }
+        }
+
+        function showSearchTab() {
+            hideAllSections();
+            setActiveButton('tabSearch');
+            const searchBox = document.getElementById('searchBoxSection');
+            const feedSec = document.getElementById('feedSection') || document.getElementById('searchResults');
+            if (searchBox) searchBox.style.display = 'block';
+            if (feedSec) feedSec.style.display = 'block';
+            if (typeof renderVideos === 'function' && typeof currentSearchResults !== 'undefined') {
+                renderVideos(currentSearchResults);
+            }
+        }
+
+        function showSavedTab() {
+            hideAllSections();
+            setActiveButton('tabSaved');
+            const savedSec = document.getElementById('savedSection');
+            if (savedSec) savedSec.style.display = 'block';
+            if (typeof renderSaved === 'function') renderSaved();
+        }
+
+        function showHistoryTab() {
+            hideAllSections();
+            setActiveButton('tabHistory');
+            const historySec = document.getElementById('historySection');
+            if (historySec) historySec.style.display = 'block';
+            if (typeof renderHistory === 'function') renderHistory();
+        }
+
+        function showNotesTab() {
+            hideAllSections();
+            setActiveButton('tabNotes');
+            const notesSec = document.getElementById('notesSection');
+            if (notesSec) notesSec.style.display = 'block';
+            if (typeof renderNotesArchive === 'function') renderNotesArchive();
+        }
         function showNotesTab() {
             const searchBox = document.getElementById('searchBoxSection');
             const feedSec = document.getElementById('feedSection') || document.getElementById('searchResults');
