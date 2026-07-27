@@ -655,6 +655,7 @@
         }
 
         // Renders a list of videos as cards into the given container
+        // Renders a list of videos as cards into the given container
         function renderVideos(videos, container, emptyMessage = 'No videos found.') {
             if (!container) return;
             container.innerHTML = '';
@@ -667,6 +668,18 @@
             videos.forEach((video) => {
                 const actualId = typeof video.id === 'object' ? (video.id.videoId || '') : (video.id || '');
                 if (!actualId) return;
+
+                // Check if this video is already saved, so the button shows the right state
+                const savedList = JSON.parse(localStorage.getItem('savedVideos') || '[]');
+                const isSaved = savedList.some(v => {
+                    const vId = typeof v.id === 'object' ? (v.id.videoId || v.id.id) : v.id;
+                    return vId === actualId;
+                });
+
+                // Pre-compute the button's look so the template literal below stays simple
+                const saveBtnBg = isSaved ? '#0088FF' : 'var(--bg-dark)';
+                const saveBtnColor = isSaved ? '#fff' : 'var(--text-main)';
+                const saveBtnText = isSaved ? 'Saved' : 'Save';
 
                 const card = document.createElement('div');
                 card.style.cssText = 'background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column;';
@@ -684,7 +697,7 @@
         <span style="font-size: 0.75rem; color: var(--text-muted);">${video.channelTitle || ''}</span>
         <div style="display: flex; gap: 6px;">
           <button onclick="openVideoModal('${actualId}')" style="background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-main); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; cursor: pointer;">Watch</button>
-          <button onclick="saveVideo('${actualId}')" style="background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-main); padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; cursor: pointer;">Save</button>
+          <button data-save-id="${actualId}" onclick="saveVideo('${actualId}')" style="background: ${saveBtnBg}; border: 1px solid var(--border-color); color: ${saveBtnColor}; padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; cursor: pointer;">${saveBtnText}</button>
         </div>
       </div>
     </div>
@@ -779,6 +792,24 @@
         }
 
         function saveVideo(videoId) {
+            let saved = JSON.parse(localStorage.getItem('savedVideos') || '[]');
+
+            const alreadySavedIndex = saved.findIndex(v => {
+                const vId = typeof v.id === 'object' ? (v.id.videoId || v.id.id) : v.id;
+                return vId === videoId;
+            });
+
+            if (alreadySavedIndex > -1) {
+                // Already saved — remove it (unsave)
+                saved.splice(alreadySavedIndex, 1);
+                localStorage.setItem('savedVideos', JSON.stringify(saved));
+                const savedCountEl = document.getElementById('savedCount');
+                if (savedCountEl) savedCountEl.textContent = saved.length;
+                updateSaveButton(videoId, false);
+                return;
+            }
+
+            // Not saved yet — find it and add it
             const allKnownVideos = [...currentSearchResults, ...JSON.parse(localStorage.getItem('watchHistory') || '[]')];
             const video = allKnownVideos.find(v => {
                 const vId = typeof v.id === 'object' ? (v.id.videoId || v.id.id) : v.id;
@@ -786,21 +817,29 @@
             });
             if (!video) return;
 
-            let saved = JSON.parse(localStorage.getItem('savedVideos') || '[]');
-            const alreadySaved = saved.some(v => {
-                const vId = typeof v.id === 'object' ? (v.id.videoId || v.id.id) : v.id;
-                return vId === videoId;
-            });
+            saved.push(video);
+            localStorage.setItem('savedVideos', JSON.stringify(saved));
+            const savedCountEl = document.getElementById('savedCount');
+            if (savedCountEl) savedCountEl.textContent = saved.length;
+            updateSaveButton(videoId, true);
+        }
 
-            if (!alreadySaved) {
-                saved.push(video);
-                localStorage.setItem('savedVideos', JSON.stringify(saved));
-                const savedCountEl = document.getElementById('savedCount');
-                if (savedCountEl) savedCountEl.textContent = saved.length;
-                alert('Video saved successfully!');
-            } else {
-                alert('Video is already saved.');
-            }
+        // Updates a Save button's text/style to reflect current saved state
+        function updateSaveButton(videoId, isSaved) {
+            const btn = document.querySelector(`[data-save-id="${videoId}"]`);
+            if (!btn) return;
+            btn.textContent = isSaved ? 'Saved' : 'Save';
+            btn.style.background = isSaved ? '#0088FF' : 'var(--bg-dark)';
+            btn.style.color = isSaved ? '#fff' : 'var(--text-main)';
+        }
+
+        // Updates a Save button's text/style to reflect current saved state
+        function updateSaveButton(videoId, isSaved) {
+            const btn = document.querySelector(`[data-save-id="${videoId}"]`);
+            if (!btn) return;
+            btn.textContent = isSaved ? 'Saved ✓' : 'Save';
+            btn.style.background = isSaved ? '#0088FF' : 'var(--bg-dark)';
+            btn.style.color = isSaved ? '#fff' : 'var(--text-main)';
         }
 
         // --- Tab navigation ---
