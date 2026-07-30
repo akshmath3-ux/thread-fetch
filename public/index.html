@@ -616,6 +616,68 @@
         </div>
     </div>
     <script>
+
+        // ---------- Focus Timer ----------
+        let timerTotalSeconds = 25 * 60;
+        let timerRemainingSeconds = timerTotalSeconds;
+        let timerInterval = null;
+        let timerRunning = false;
+
+        function formatTimerDisplay(seconds) {
+            const m = Math.floor(seconds / 60);
+            const s = seconds % 60;
+            return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        }
+
+        function updateTimerDisplay() {
+            const display = document.getElementById('minimizedTimerDisplay');
+            if (display) display.textContent = formatTimerDisplay(timerRemainingSeconds);
+        }
+
+        function setTimer(minutes) {
+            pauseTimerInternal();
+            timerTotalSeconds = minutes * 60;
+            timerRemainingSeconds = timerTotalSeconds;
+            updateTimerDisplay();
+        }
+
+        function toggleTimer() {
+            if (timerRunning) {
+                pauseTimerInternal();
+            } else {
+                startTimerInternal();
+            }
+        }
+
+        function startTimerInternal() {
+            if (timerRunning) return;
+            timerRunning = true;
+            const btn = document.getElementById('startPauseBtn');
+            if (btn) btn.textContent = 'Pause';
+
+            timerInterval = setInterval(() => {
+                if (timerRemainingSeconds <= 0) {
+                    pauseTimerInternal();
+                    alert('Time\'s up!');
+                    return;
+                }
+                timerRemainingSeconds--;
+                updateTimerDisplay();
+            }, 1000);
+        }
+
+        function pauseTimerInternal() {
+            timerRunning = false;
+            clearInterval(timerInterval);
+            const btn = document.getElementById('startPauseBtn');
+            if (btn) btn.textContent = 'Start';
+        }
+
+        function resetTimer() {
+            pauseTimerInternal();
+            timerRemainingSeconds = timerTotalSeconds;
+            updateTimerDisplay();
+        }
         let currentSearchResults = [];
 
         // Preset topic buttons (Design, Gaming, Coding, Science)
